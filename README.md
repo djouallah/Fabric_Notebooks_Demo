@@ -9,3 +9,7 @@ Please keep the local Path as
 for raw data : raw_landing='/lakehouse/default/Files/raw'
 
 for Delta : '/lakehouse/default/Tables/'
+
+
+<img width="723" alt="image" src="https://github.com/djouallah/Light_ETL_Challenge/assets/12554469/af5c533e-d193-4000-9fb4-bad08efa747d">
+
