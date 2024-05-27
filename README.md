@@ -12,6 +12,4 @@ for Delta Python : '/lakehouse/default/Tables/'
 
 For Fabric, it will automatically detect Spark
 
-<img width="776" alt="image" src="https://github.com/djouallah/Light_ETL_Challenge/assets/12554469/29ccf459-f29e-47e9-8f7c-0f371fcc5f67">
-
-
+<img width="764" alt="image" src="https://github.com/djouallah/Light_ETL_Challenge/assets/12554469/a59da4af-da40-46a8-b3d1-c81a53813489">
