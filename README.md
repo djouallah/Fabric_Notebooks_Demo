@@ -5,7 +5,7 @@
 
 ### Delta Python writer works fine but it may produce delta tables that some Fabric Engines can't read ( RLE Dictionnary in the log snapshots, TIMESTAMP_NTZ data type) , use at your own risk.
 
-### this is just a personal personal project and does not represents the view of my employer.
+### This is just a personal personal project and does not represents the view of my employer.
 
 
 Extract data fom a csv. the number of columns is higher than what's in the header, filter a subset of data and export to Delta Lake
