@@ -1,4 +1,6 @@
-# Microsoft Fabric notebook officially Support : Spark, Pandas and Pyarrow, this is just personal stuff.
+# Note : Microsoft Fabric notebook officially Support : Spark, Pandas and Pyarrow, this is just personal stuff.
+
+
 
 # Light_ETL_Challenge
 extract data fom a csv. the number of columns is higher than what's in the header, filter a subset of data and export to Delta Lake
