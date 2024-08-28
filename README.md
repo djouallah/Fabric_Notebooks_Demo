@@ -1,9 +1,8 @@
 
 # Light_ETL_Challenge
 
-### Note : Microsoft Fabric notebook officially Support : Spark, Pandas and Pyarrow for reading, for writing Delta Table only Spark is supported 
+### Note : Microsoft Fabric Notebook support two runtime : Spark, and pure python (private preview)
 
-### Delta Python writer works fine but it may produce delta tables that some Fabric Engines can't read ( RLE Dictionnary in the log snapshots, TIMESTAMP_NTZ data type) , use at your own risk.
 
 ### This is just a personal project and does not represents the view of my employer.
 
