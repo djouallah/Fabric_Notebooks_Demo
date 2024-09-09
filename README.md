@@ -9,6 +9,6 @@ Analytical : TPCH & TPCDS Benchmarks
 
 NYT        : using Ibis and SQLframe to analyze New York Taxi Dataset
 
-Full Solution in Fabric, sync Directly to your Workspace  https://github.com/djouallah/aemo_fabric
+Australian Electricity Market : Fork and sync Directly to your Workspace  https://github.com/djouallah/aemo_fabric
 
-Gis example in Fabeic : sync directly to your Workspace  https://github.com/djouallah/fabric_gis
+Gis example in Fabric         : Fork and sync Directly to your Workspace  https://github.com/djouallah/fabric_gis
