@@ -4,6 +4,7 @@
 
 | **Category**                         | **Description**                                                                                          |
 |--------------------------------------|----------------------------------------------------------------------------------------------------------|
+| **Attach_LH**                        | Attach a Lakehouse to DuckDB inside or outside Fabric                                           |
 | **ETL**                              | Comparing Python Engines Performance in doing a typical ETL job                                           |
 | **Onelake**                          | How to read and write to Onelake outside of Fabric                                                        |
 | **Analytical**                       | TPCH & TPCDS Benchmarks                                                                                   |
