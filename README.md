@@ -5,6 +5,8 @@
 | **Category**                         | **Description**                                                                                          |
 |--------------------------------------|----------------------------------------------------------------------------------------------------------|
 | **Attach_LH**                        | Attach a Lakehouse to DuckDB inside or outside Fabric                                           |
+| **Iceberg**                        | Read and write to an Iceberg Catalog                                          |
+| **UC**                        | Read from Unity Catalog                                         |
 | **DWH**                        | Connect to DWH using SQL/Ibis API and using data masking                                          |
 | **ETL**                              | Comparing Python Engines Performance in doing a typical ETL job                                           |
 | **Onelake**                          | How to read and write to Onelake outside of Fabric                                                        |
