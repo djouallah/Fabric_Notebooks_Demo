@@ -1,0 +1,817 @@
+createOrReplace
+
+	model Model
+		culture: en-GB
+		defaultPowerBIDataSourceVersion: powerBI_V3
+		sourceQueryCulture: en-AU
+		dataAccessOptions
+			legacyRedirects
+			returnErrorValuesAsNull
+
+		table item
+			lineageTag: 591382f2-33bb-422c-ac55-0ef6fd5f0fe2
+
+			column i_item_sk
+				dataType: int64
+				isHidden
+				formatString: 0
+				sourceProviderType: int
+				lineageTag: 7de2e725-c01a-4798-a112-6dbbf6ce5677
+				summarizeBy: none
+				sourceColumn: i_item_sk
+
+				changedProperty = IsHidden
+
+				annotation SummarizationSetBy = Automatic
+
+			column i_item_desc
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: 852dc996-2208-4bc9-b61d-6903148256d8
+				summarizeBy: none
+				sourceColumn: i_item_desc
+
+				annotation SummarizationSetBy = Automatic
+
+			column i_brand
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: bae35fa6-2ec2-49c7-989e-bc3ffe62ee9a
+				summarizeBy: none
+				sourceColumn: i_brand
+
+				annotation SummarizationSetBy = Automatic
+
+			column i_class
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: 8b9cd5d6-27f5-4cb4-802f-f43465ec6032
+				summarizeBy: none
+				sourceColumn: i_class
+
+				annotation SummarizationSetBy = Automatic
+
+			column i_category
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: 862a747c-d344-486b-baf7-4f182aca1646
+				summarizeBy: none
+				sourceColumn: i_category
+
+				annotation SummarizationSetBy = Automatic
+
+			column i_manufact
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: 36dfa308-1db1-43ef-8e11-7d7157473252
+				summarizeBy: none
+				sourceColumn: i_manufact
+
+				annotation SummarizationSetBy = Automatic
+
+			column i_color
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: fbe5b7a2-ed47-44d0-94d1-c08365626201
+				summarizeBy: none
+				sourceColumn: i_color
+
+				annotation SummarizationSetBy = Automatic
+
+			column i_units
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: 0027ce4a-b9ca-4544-9302-b51a950e4d83
+				summarizeBy: none
+				sourceColumn: i_units
+
+				annotation SummarizationSetBy = Automatic
+
+			column i_container
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: 0229bdeb-d89e-499c-9233-dabd933fc773
+				summarizeBy: none
+				sourceColumn: i_container
+
+				annotation SummarizationSetBy = Automatic
+
+			column i_product_name
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: 92b3839a-57c5-431a-985b-59029cf94ae9
+				summarizeBy: none
+				sourceColumn: i_product_name
+
+				annotation SummarizationSetBy = Automatic
+
+			partition item = m
+				mode: import
+				source =
+						let
+						    Source = Sql.Database("xpkymsttihxelp6vuo2w5ywt2u-s3yqwri7im7uneywfuoodwuy3m.datawarehouse.fabric.microsoft.com", "benchmarks"),
+						    DS1_item = Source{[Schema=schema,Item="item"]}[Data],
+						    #"Removed Other Columns" = Table.SelectColumns(DS1_item,{"i_item_sk", "i_item_desc", "i_brand", "i_class", "i_category", "i_manufact", "i_color", "i_units", "i_container", "i_product_name"})
+						in
+						    #"Removed Other Columns"
+
+			annotation PBI_ResultType = Table
+
+			annotation PBI_NavigationStepName = Navigation
+
+		table store
+			lineageTag: e30500f3-7ee0-491c-921c-a87f10e307f3
+
+			column s_store_sk
+				dataType: int64
+				isHidden
+				formatString: 0
+				sourceProviderType: int
+				lineageTag: bd99e8f8-1b4a-4599-92e0-06db4f263878
+				summarizeBy: none
+				sourceColumn: s_store_sk
+
+				changedProperty = IsHidden
+
+				annotation SummarizationSetBy = Automatic
+
+			column s_rec_start_date
+				dataType: dateTime
+				formatString: Long Date
+				sourceProviderType: date
+				lineageTag: 3805628b-4aa3-46c0-8ead-5d1f9964ea85
+				summarizeBy: none
+				sourceColumn: s_rec_start_date
+
+				annotation SummarizationSetBy = Automatic
+
+				annotation UnderlyingDateTimeDataType = Date
+
+			column s_rec_end_date
+				dataType: dateTime
+				formatString: Long Date
+				sourceProviderType: date
+				lineageTag: f74ff474-8484-4b96-a20a-e8f9ddca9ec6
+				summarizeBy: none
+				sourceColumn: s_rec_end_date
+
+				annotation SummarizationSetBy = Automatic
+
+				annotation UnderlyingDateTimeDataType = Date
+
+			column s_store_name
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: e0d9d6c5-8b29-48e6-9a16-1b541fca258b
+				summarizeBy: none
+				sourceColumn: s_store_name
+
+				annotation SummarizationSetBy = Automatic
+
+			column s_number_employees
+				dataType: int64
+				formatString: 0
+				sourceProviderType: int
+				lineageTag: 8ffca348-05b8-42d0-a718-340fea8ecf36
+				summarizeBy: sum
+				sourceColumn: s_number_employees
+
+				annotation SummarizationSetBy = Automatic
+
+			column s_floor_space
+				dataType: int64
+				formatString: 0
+				sourceProviderType: int
+				lineageTag: e3779f79-49ed-4392-aa44-cbef441d7673
+				summarizeBy: sum
+				sourceColumn: s_floor_space
+
+				annotation SummarizationSetBy = Automatic
+
+			column s_hours
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: 5f47767b-045b-408b-8924-5dccdeb1a04c
+				summarizeBy: none
+				sourceColumn: s_hours
+
+				annotation SummarizationSetBy = Automatic
+
+			column s_manager
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: 390e1178-f300-4130-83ef-d654c06d126b
+				summarizeBy: none
+				sourceColumn: s_manager
+
+				annotation SummarizationSetBy = Automatic
+
+			column s_geography_class
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: e7ef4076-63d9-4638-9594-ae5cc1e0b0bb
+				summarizeBy: none
+				sourceColumn: s_geography_class
+
+				annotation SummarizationSetBy = Automatic
+
+			column s_market_desc
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: 6debc301-e80c-4835-bb44-336752916561
+				summarizeBy: none
+				sourceColumn: s_market_desc
+
+				annotation SummarizationSetBy = Automatic
+
+			column s_market_manager
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: c6455a39-90dc-44a4-b251-e29ce0db0d3c
+				summarizeBy: none
+				sourceColumn: s_market_manager
+
+				annotation SummarizationSetBy = Automatic
+
+			column s_division_name
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: 2fbd8a86-ad84-4a5f-8bf2-4f485ba0e175
+				summarizeBy: none
+				sourceColumn: s_division_name
+
+				annotation SummarizationSetBy = Automatic
+
+			column s_company_name
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: a3dfe1ad-0fa6-4207-be0e-c692f565b6ec
+				summarizeBy: none
+				sourceColumn: s_company_name
+
+				annotation SummarizationSetBy = Automatic
+
+			column s_street_number
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: 305667f7-027b-4fa0-ae0c-97227f144356
+				summarizeBy: none
+				sourceColumn: s_street_number
+
+				annotation SummarizationSetBy = Automatic
+
+			column s_street_name
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: e5ed3d04-c1ea-4161-a371-8fc7d9783d9d
+				summarizeBy: none
+				sourceColumn: s_street_name
+
+				annotation SummarizationSetBy = Automatic
+
+			column s_street_type
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: 0c2c65ec-bf86-4a4c-925e-eaa2fe276e6b
+				summarizeBy: none
+				sourceColumn: s_street_type
+
+				annotation SummarizationSetBy = Automatic
+
+			column s_suite_number
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: a9eda027-0d40-449d-8011-289944e5dac4
+				summarizeBy: none
+				sourceColumn: s_suite_number
+
+				annotation SummarizationSetBy = Automatic
+
+			column s_city
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: 041a2996-8e29-4691-a093-ab76a7be2f3e
+				summarizeBy: none
+				sourceColumn: s_city
+
+				annotation SummarizationSetBy = Automatic
+
+			column s_county
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: c1945920-5bb3-4624-a38f-92d60ef18bf2
+				summarizeBy: none
+				sourceColumn: s_county
+
+				annotation SummarizationSetBy = Automatic
+
+			column s_state
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: 344e9014-6095-4c74-b978-8f1231089c84
+				summarizeBy: none
+				sourceColumn: s_state
+
+				annotation SummarizationSetBy = Automatic
+
+			column s_zip
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: 61344ba6-de6d-4c13-923c-afa01442fcf3
+				summarizeBy: none
+				sourceColumn: s_zip
+
+				annotation SummarizationSetBy = Automatic
+
+			column s_country
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: d9d5afa4-7eba-4d39-b7ef-1933e4cd915e
+				summarizeBy: none
+				sourceColumn: s_country
+
+				annotation SummarizationSetBy = Automatic
+
+			column s_gmt_offset
+				dataType: double
+				sourceProviderType: decimal(5, 2)
+				lineageTag: ed7be4fc-069b-4360-b75c-027646bacc88
+				summarizeBy: sum
+				sourceColumn: s_gmt_offset
+
+				annotation SummarizationSetBy = Automatic
+
+				annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+			column s_tax_percentage
+				dataType: double
+				sourceProviderType: decimal(5, 2)
+				lineageTag: 13783af8-8d9a-435e-98cb-4324b0359a9e
+				summarizeBy: sum
+				sourceColumn: s_tax_percentage
+
+				annotation SummarizationSetBy = Automatic
+
+				annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+			partition store = m
+				mode: import
+				source =
+						let
+						    Source = Sql.Database("xpkymsttihxelp6vuo2w5ywt2u-s3yqwri7im7uneywfuoodwuy3m.datawarehouse.fabric.microsoft.com", "benchmarks"),
+						    DS1_store = Source{[Schema=schema,Item="store"]}[Data],
+						    #"Removed Other Columns" = Table.SelectColumns(DS1_store,{"s_store_sk", "s_rec_start_date", "s_rec_end_date", "s_store_name", "s_number_employees", "s_floor_space", "s_hours", "s_manager", "s_geography_class", "s_market_desc", "s_market_manager", "s_division_name", "s_company_name", "s_street_number", "s_street_name", "s_street_type", "s_suite_number", "s_city", "s_county", "s_state", "s_zip", "s_country", "s_gmt_offset", "s_tax_percentage"})
+						in
+						    #"Removed Other Columns"
+
+			annotation PBI_ResultType = Table
+
+			annotation PBI_NavigationStepName = Navigation
+
+		table store_returns
+			isHidden
+			lineageTag: 36e5e4b2-4830-4f5c-8998-bdb94f42d92f
+
+			column sr_returned_date_sk
+				dataType: int64
+				isHidden
+				formatString: 0
+				sourceProviderType: int
+				lineageTag: e72d163e-73cf-4443-b115-88bff907422a
+				summarizeBy: none
+				sourceColumn: sr_returned_date_sk
+
+				changedProperty = IsHidden
+
+				annotation SummarizationSetBy = Automatic
+
+			column sr_item_sk
+				dataType: int64
+				isHidden
+				formatString: 0
+				sourceProviderType: int
+				lineageTag: 0bccbc27-ec24-4d78-af90-ca2d304c339d
+				summarizeBy: none
+				sourceColumn: sr_item_sk
+
+				changedProperty = IsHidden
+
+				annotation SummarizationSetBy = Automatic
+
+			column sr_customer_sk
+				dataType: int64
+				isHidden
+				formatString: 0
+				sourceProviderType: int
+				lineageTag: 497ea0a4-126e-4b62-a6e8-5114754d3ac4
+				summarizeBy: none
+				sourceColumn: sr_customer_sk
+
+				changedProperty = IsHidden
+
+				annotation SummarizationSetBy = Automatic
+
+			column sr_store_sk
+				dataType: int64
+				isHidden
+				formatString: 0
+				sourceProviderType: int
+				lineageTag: 2f1990d4-3911-4ee3-a3b8-5c64f1bf254a
+				summarizeBy: none
+				sourceColumn: sr_store_sk
+
+				changedProperty = IsHidden
+
+				annotation SummarizationSetBy = Automatic
+
+			column sr_return_quantity
+				dataType: int64
+				isHidden
+				formatString: 0
+				sourceProviderType: int
+				lineageTag: 8ede42d6-a0d3-4cdd-acb0-a1aabe2b40d9
+				summarizeBy: sum
+				sourceColumn: sr_return_quantity
+
+				changedProperty = IsHidden
+
+				annotation SummarizationSetBy = Automatic
+
+			column sr_return_amt
+				dataType: double
+				isHidden
+				sourceProviderType: decimal(7, 2)
+				lineageTag: 509f6318-5c07-4100-a227-12d9f159d463
+				summarizeBy: sum
+				sourceColumn: sr_return_amt
+
+				changedProperty = IsHidden
+
+				annotation SummarizationSetBy = Automatic
+
+				annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+			partition store_returns = m
+				mode: import
+				source =
+						let
+						    Source = Sql.Database("xpkymsttihxelp6vuo2w5ywt2u-s3yqwri7im7uneywfuoodwuy3m.datawarehouse.fabric.microsoft.com", "benchmarks"),
+						    DS1_store_returns = Source{[Schema=schema,Item="store_returns"]}[Data],
+						    #"Removed Other Columns" = Table.SelectColumns(DS1_store_returns,{"sr_returned_date_sk", "sr_item_sk", "sr_customer_sk", "sr_store_sk", "sr_return_quantity", "sr_return_amt"})
+						in
+						    #"Removed Other Columns"
+
+			changedProperty = IsHidden
+
+			annotation PBI_ResultType = Table
+
+			annotation PBI_NavigationStepName = Navigation
+
+		table date_dim
+			lineageTag: 1ed50d9d-7bd1-47a3-aeb3-819745d3cfd0
+
+			column d_date_sk
+				dataType: int64
+				isHidden
+				formatString: 0
+				sourceProviderType: int
+				lineageTag: 07f05fc9-7b9b-4aaf-a403-ad40cf3e4635
+				summarizeBy: none
+				sourceColumn: d_date_sk
+
+				changedProperty = IsHidden
+
+				annotation SummarizationSetBy = Automatic
+
+			column d_year
+				dataType: int64
+				formatString: 0
+				sourceProviderType: int
+				lineageTag: d572b36b-95b1-420c-9faf-51e6f83f0a50
+				summarizeBy: sum
+				sourceColumn: d_year
+
+				annotation SummarizationSetBy = Automatic
+
+			column d_dow
+				dataType: int64
+				formatString: 0
+				sourceProviderType: int
+				lineageTag: 50ee43d3-b19b-4f09-874d-ca88f80a8c05
+				summarizeBy: sum
+				sourceColumn: d_dow
+
+				annotation SummarizationSetBy = Automatic
+
+			column d_moy
+				dataType: int64
+				formatString: 0
+				sourceProviderType: int
+				lineageTag: c8da77b8-abaf-43fb-b8b1-6505f2128c50
+				summarizeBy: sum
+				sourceColumn: d_moy
+
+				annotation SummarizationSetBy = Automatic
+
+			column d_dom
+				dataType: int64
+				formatString: 0
+				sourceProviderType: int
+				lineageTag: 8cf0efeb-7063-4763-a7b3-f9c2fade6669
+				summarizeBy: sum
+				sourceColumn: d_dom
+
+				annotation SummarizationSetBy = Automatic
+
+			column d_qoy
+				dataType: int64
+				formatString: 0
+				sourceProviderType: int
+				lineageTag: 80eec85b-b07c-45d9-aaba-ec6179225d23
+				summarizeBy: sum
+				sourceColumn: d_qoy
+
+				annotation SummarizationSetBy = Automatic
+
+			column d_holiday
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: 32f9a33b-2482-4ade-93b3-a1c5e537109f
+				summarizeBy: none
+				sourceColumn: d_holiday
+
+				annotation SummarizationSetBy = Automatic
+
+			column d_weekend
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: becf63e5-6bd8-4988-aecf-460a3af8bc4b
+				summarizeBy: none
+				sourceColumn: d_weekend
+
+				annotation SummarizationSetBy = Automatic
+
+			partition date_dim = m
+				mode: import
+				source =
+						let
+						    Source = Sql.Database("xpkymsttihxelp6vuo2w5ywt2u-s3yqwri7im7uneywfuoodwuy3m.datawarehouse.fabric.microsoft.com", "benchmarks"),
+						    DS1_date_dim = Source{[Schema=schema,Item="date_dim"]}[Data],
+						    #"Removed Other Columns" = Table.SelectColumns(DS1_date_dim,{"d_date_sk", "d_year", "d_dow", "d_moy", "d_dom", "d_qoy", "d_holiday", "d_weekend"})
+						in
+						    #"Removed Other Columns"
+
+			annotation PBI_ResultType = Table
+
+			annotation PBI_NavigationStepName = Navigation
+
+		table customer
+			lineageTag: e60033a2-c982-4ded-bdb5-a506f2df8305
+
+			column c_customer_sk
+				dataType: int64
+				isHidden
+				formatString: 0
+				sourceProviderType: int
+				lineageTag: 3188bc9c-78af-41c3-ba1e-0467206fb80f
+				summarizeBy: none
+				sourceColumn: c_customer_sk
+
+				changedProperty = IsHidden
+
+				annotation SummarizationSetBy = Automatic
+
+			column c_birth_year
+				dataType: int64
+				formatString: 0
+				sourceProviderType: int
+				lineageTag: 2e78c93a-b378-4584-b22d-a56d339e765f
+				summarizeBy: sum
+				sourceColumn: c_birth_year
+
+				annotation SummarizationSetBy = Automatic
+
+			column c_birth_country
+				dataType: string
+				sourceProviderType: varchar(8000)
+				lineageTag: 1e29e75f-5730-4c6b-8b4b-8c82bdabc977
+				summarizeBy: none
+				sourceColumn: c_birth_country
+
+				annotation SummarizationSetBy = Automatic
+
+			column c_preferred_cust_flag
+				dataType: string
+				lineageTag: eafb2814-06df-4ac4-904e-644cdb1db93b
+				summarizeBy: none
+				sourceColumn: c_preferred_cust_flag
+
+				annotation SummarizationSetBy = Automatic
+
+			partition customer = m
+				mode: import
+				source =
+						let
+						    Source = Sql.Database("xpkymsttihxelp6vuo2w5ywt2u-s3yqwri7im7uneywfuoodwuy3m.datawarehouse.fabric.microsoft.com", "benchmarks"),
+						    DS1_customer = Source{[Schema=schema,Item="customer"]}[Data],
+						    #"Removed Other Columns" = Table.SelectColumns(DS1_customer,{"c_customer_sk", "c_preferred_cust_flag", "c_birth_year", "c_birth_country"})
+						in
+						    #"Removed Other Columns"
+
+			annotation PBI_ResultType = Table
+
+			annotation PBI_NavigationStepName = Navigation
+
+		table store_sales
+			isHidden
+			lineageTag: 0bc7b1d4-58cb-416e-b798-ea4d04c6faa2
+
+			column ss_sold_date_sk
+				dataType: int64
+				isHidden
+				formatString: 0
+				sourceProviderType: int
+				lineageTag: 6f60d748-f84c-4a57-8ddf-3b157fba06e2
+				summarizeBy: none
+				sourceColumn: ss_sold_date_sk
+
+				changedProperty = IsHidden
+
+				annotation SummarizationSetBy = Automatic
+
+			column ss_item_sk
+				dataType: int64
+				isHidden
+				formatString: 0
+				sourceProviderType: int
+				lineageTag: 7e7c6b15-b744-4c90-b875-34477b353a2d
+				summarizeBy: none
+				sourceColumn: ss_item_sk
+
+				changedProperty = IsHidden
+
+				annotation SummarizationSetBy = Automatic
+
+			column ss_customer_sk
+				dataType: int64
+				isHidden
+				formatString: 0
+				sourceProviderType: int
+				lineageTag: 52ee33c2-a8eb-4532-8f93-96c0f25a7949
+				summarizeBy: none
+				sourceColumn: ss_customer_sk
+
+				changedProperty = IsHidden
+
+				annotation SummarizationSetBy = Automatic
+
+			column ss_store_sk
+				dataType: int64
+				isHidden
+				formatString: 0
+				sourceProviderType: int
+				lineageTag: 8da7e3f6-acf8-4bfb-850e-89654bfe4662
+				summarizeBy: none
+				sourceColumn: ss_store_sk
+
+				changedProperty = IsHidden
+
+				annotation SummarizationSetBy = Automatic
+
+			column ss_quantity
+				dataType: int64
+				isHidden
+				formatString: 0
+				sourceProviderType: int
+				lineageTag: faf23e53-9e49-413d-92d0-694cd42075f6
+				summarizeBy: sum
+				sourceColumn: ss_quantity
+
+				changedProperty = IsHidden
+
+				annotation SummarizationSetBy = Automatic
+
+			column ss_sales_price
+				dataType: double
+				isHidden
+				lineageTag: d6948606-b24d-4ffc-9917-cdb098649c5b
+				summarizeBy: sum
+				sourceColumn: ss_sales_price
+
+				changedProperty = IsHidden
+
+				annotation SummarizationSetBy = Automatic
+
+				annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+			partition store_sales = m
+				mode: import
+				source =
+						let
+						    Source = Sql.Database("xpkymsttihxelp6vuo2w5ywt2u-s3yqwri7im7uneywfuoodwuy3m.datawarehouse.fabric.microsoft.com", "benchmarks"),
+						    DS10_store_sales = Source{[Schema=schema,Item="store_sales"]}[Data],
+						    #"Removed Other Columns" = Table.SelectColumns(DS10_store_sales,{"ss_sold_date_sk", "ss_item_sk", "ss_customer_sk", "ss_store_sk", "ss_quantity", "ss_sales_price"})
+						in
+						    #"Removed Other Columns"
+
+			changedProperty = IsHidden
+
+			annotation PBI_NavigationStepName = Navigation
+
+			annotation PBI_ResultType = Table
+
+		table 0_measures
+			lineageTag: 390b3f66-4665-4e3c-81b5-2dd1cdfac1d6
+
+			measure 'Net Sales' = [Total Sales] - [Total Returns]
+				formatString: \$#,0;(\$#,0);\$#,0
+				lineageTag: e5fd20f2-ccae-4668-a85e-925826a388bf
+
+			measure 'Total Sales' = SUMx(store_sales,[ss_sales_price] * [ss_quantity])
+				formatString: \$#,0;(\$#,0);\$#,0
+				lineageTag: a36a8887-62c7-4789-85e6-b79b133f3625
+
+			measure 'Total Returns' = ```
+					SUM(store_returns[sr_return_amt])
+					
+					```
+				formatString: \$#,0;(\$#,0);\$#,0
+				lineageTag: e68f5e8b-e514-4827-a89e-dee896ae8251
+
+			measure 'Return Rate' = DIVIDE([Total Returns], [Total Sales])
+				formatString: 0.00%;-0.00%;0.00%
+				lineageTag: b3ea42d4-582f-4dde-b891-076ab095099e
+
+			measure 'Total Returns Units' = SUM(store_returns[sr_return_quantity])
+				formatString: #,0
+				lineageTag: 4a8f699b-18ca-41e9-80cd-d9f11f002887
+
+			column Value
+				isHidden
+				formatString: 0
+				lineageTag: 91c8d165-b66a-4b99-84ca-3e500db12518
+				summarizeBy: sum
+				isNameInferred
+				sourceColumn: [Value]
+
+				annotation SummarizationSetBy = Automatic
+
+			partition 0_measures = calculated
+				mode: import
+				source = {BLANK()}
+
+			annotation PBI_Id = e65e1981dfef4e01a1ff2ece980838d2
+
+		relationship 23ac129a-483f-42c2-5f19-8ddd212ba449
+			relyOnReferentialIntegrity
+			fromColumn: store_returns.sr_returned_date_sk
+			toColumn: date_dim.d_date_sk
+
+		relationship b8913c66-725a-3f0e-c792-11126deeab9f
+			fromColumn: store_sales.ss_sold_date_sk
+			toColumn: date_dim.d_date_sk
+
+		relationship b019d333-b6cb-af8a-f558-73a7dac17ad3
+			fromColumn: store_sales.ss_item_sk
+			toColumn: item.i_item_sk
+
+		relationship 312458c1-d7bd-146b-68e2-f18c7f11d672
+			fromColumn: store_sales.ss_customer_sk
+			toColumn: customer.c_customer_sk
+
+		relationship 70fc3f0b-4f6d-967f-f6f8-765f2ffdc2d1
+			fromColumn: store_sales.ss_store_sk
+			toColumn: store.s_store_sk
+
+		relationship bac8db03-d084-82e8-cf9a-a5f161b4dc92
+			fromColumn: store_returns.sr_item_sk
+			toColumn: item.i_item_sk
+
+		relationship 7cd0800a-b615-31f0-486e-33854249f1d3
+			fromColumn: store_returns.sr_store_sk
+			toColumn: store.s_store_sk
+
+		relationship 111f2b0e-de5b-3599-f598-8fbd688a0e0a
+			fromColumn: store_returns.sr_customer_sk
+			toColumn: customer.c_customer_sk
+
+		cultureInfo en-GB
+
+			linguisticMetadata = {"Version":"1.0.0","Language":"en-US"}
+				contentType: json
+
+		expression schema = "DS0d1" meta [IsParameterQuery=true, Type="Text", IsParameterQueryRequired=true]
+			lineageTag: f91e89ff-0a01-4917-b3a2-c6e28d7774ec
+
+			annotation PBI_NavigationStepName = Navigation
+
+			annotation PBI_ResultType = Text
+
+		annotation __PBI_TimeIntelligenceEnabled = 0
+
+		annotation PBIDesktopVersion = 2.140.829.0 (25.02)+64e0b2e37258cf248e8119ae244f4e8e75927166
+
+		annotation PBI_QueryOrder = ["item","store","store_returns","date_dim","customer","store_sales","schema"]
+
+		annotation PBI_ProTooling = ["TMDLView_Desktop"]
+
