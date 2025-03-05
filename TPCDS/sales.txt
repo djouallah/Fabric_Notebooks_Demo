@@ -746,6 +746,15 @@ createOrReplace
 				formatString: #,0
 				lineageTag: 4a8f699b-18ca-41e9-80cd-d9f11f002887
 
+			measure Latest_sales_date = CALCULATE(max(store_sales[ss_sold_date_sk]),REMOVEFILTERS())
+				formatString: 0
+				lineageTag: 628e62c7-6619-4fda-9c90-1abd06d11e00
+
+			measure Sales_Cumulative = if(min(date_dim[d_date_sk])<= [Latest_sales_date],CALCULATE([Total Sales], FILTER ( ALL ('date_dim'), date_dim[d_date_sk] <= max(date_dim[d_date_sk]))),BLANK())
+				lineageTag: 5534503f-28bb-43cf-9cb9-1d47af28d881
+
+				annotation PBI_FormatHint = {"isGeneralNumber":true}
+
 			column Value
 				isHidden
 				formatString: 0
@@ -809,7 +818,7 @@ createOrReplace
 
 		annotation __PBI_TimeIntelligenceEnabled = 0
 
-		annotation PBIDesktopVersion = 2.140.829.0 (25.02)+64e0b2e37258cf248e8119ae244f4e8e75927166
+		annotation PBIDesktopVersion = 2.141.528.0 (25.03)+364bcf2c2b5bb0f5ca49d6d6922a547463bcdfd8
 
 		annotation PBI_QueryOrder = ["item","store","store_returns","date_dim","customer","store_sales","schema"]
 
