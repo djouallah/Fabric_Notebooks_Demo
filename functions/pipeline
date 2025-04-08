@@ -1,0 +1,141 @@
+{
+    "name": "download",
+    "objectId": "848c0c56-7927-4b6b-b497-c480b78ff301",
+    "properties": {
+        "activities": [
+            {
+                "name": "ForEach1",
+                "type": "ForEach",
+                "dependsOn": [
+                    {
+                        "activity": "source",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    },
+                    {
+                        "activity": "destination",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    },
+                    {
+                        "activity": "totalfiles",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "typeProperties": {
+                    "items": {
+                        "value": "@range(0, length(variables('source')))\n\n\n\n",
+                        "type": "Expression"
+                    },
+                    "activities": [
+                        {
+                            "name": "download",
+                            "type": "AzureFunctionActivity",
+                            "dependsOn": [],
+                            "policy": {
+                                "timeout": "0.01:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "typeProperties": {
+                                "functionName": "download",
+                                "parameters": {
+                                    "url": {
+                                        "value": "@variables('source')[item()]",
+                                        "type": "Expression"
+                                    },
+                                    "folder": {
+                                        "value": "@variables('destination')[item()]",
+                                        "type": "Expression"
+                                    },
+                                    "totalfiles": {
+                                        "value": "@variables('totalfiles')[item()]",
+                                        "type": "Expression"
+                                    }
+                                },
+                                "functionSetId": "3aa84ba3-ce6a-48d5-9482-4af8ab2d03f7",
+                                "workspaceId": "6cf5cf37-c560-4aa0-90fc-97baf5fed1f1"
+                            },
+                            "externalReferences": {
+                                "connection": "a0e77dd9-1715-4c83-b3fd-28f3ffc7851a"
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "source",
+                "type": "SetVariable",
+                "dependsOn": [],
+                "policy": {
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "variableName": "source",
+                    "value": [
+                        "http://nemweb.com.au/Reports/Current/DispatchIS_Reports/",
+                        "http://nemweb.com.au/Reports/Current/Dispatch_SCADA/",
+                        "https://nemweb.com.au/Reports/Current/Daily_Reports/",
+                        "https://data.wa.aemo.com.au/public/market-data/wemde/facilityScada/previous/"
+                    ]
+                }
+            },
+            {
+                "name": "destination",
+                "type": "SetVariable",
+                "dependsOn": [],
+                "policy": {
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "variableName": "destination",
+                    "value": [
+                        "Reports/Current/DispatchIS_Reports/",
+                        "Reports/Current/Dispatch_SCADA/",
+                        "Reports/Current/Daily_Reports/",
+                        "Reports/Current/wa/"
+                    ]
+                }
+            },
+            {
+                "name": "totalfiles",
+                "type": "SetVariable",
+                "dependsOn": [],
+                "policy": {
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "variableName": "totalfiles",
+                    "value": [
+                        50,
+                        50,
+                        10,
+                        50
+                    ]
+                }
+            }
+        ],
+        "variables": {
+            "source": {
+                "type": "array"
+            },
+            "destination": {
+                "type": "array"
+            },
+            "totalfiles": {
+                "type": "Array"
+            }
+        },
+        "lastModifiedByObjectId": "3f4b63c4-c4a4-49e4-8fdf-59bb83b69e29",
+        "lastPublishTime": "2025-04-08T03:37:58Z"
+    }
+}
