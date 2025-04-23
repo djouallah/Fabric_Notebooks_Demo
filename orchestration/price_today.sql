@@ -1,6 +1,19 @@
--- materialized: (price_today,parquet,append)
+-- materialized: (raw,price_today,append)
 
-WITH RAW AS (
+SET VARIABLE list_of_files_price_today =
+(
+  WITH xxxx AS (
+    SELECT
+      concat('abfss://udf@onelake.dfs.fabric.microsoft.com/data.Lakehouse/Files/', extracted_filepath) AS file
+    FROM 'abfss://udf@onelake.dfs.fabric.microsoft.com/data.Lakehouse/Files/Reports/Current/DispatchIS_Reports/download_log.csv'
+    WHERE parse_filename(extracted_filepath) NOT IN (SELECT DISTINCT file FROM price_today)
+    ORDER BY file
+    LIMIT 5000
+  )
+  SELECT list(file) FROM xxxx
+);
+
+WITH RAW_price AS (
     FROM read_csv(getvariable('list_of_files_price_today'),
       Skip = 1,
       header = 0,
@@ -86,12 +99,11 @@ WITH RAW AS (
       AND PRICE = 'PRICE'
   )
   SELECT
-    * EXCLUDE (SETTLEMENTDATE, I, xx, 'PRICE', filename), -- Exclude specified columns
-    CAST(columns(* EXCLUDE (SETTLEMENTDATE, REGIONID, I, PRICE, filename, OCD_STATUS, MII_STATUS, DISPATCH, PRICE_STATUS, LASTCHANGED)) AS DOUBLE), -- Cast remaining columns to DOUBLE
+    REGIONID,
+    CAST(columns(* EXCLUDE (SETTLEMENTDATE, REGIONID, I,xx, PRICE, filename, OCD_STATUS, MII_STATUS, DISPATCH, PRICE_STATUS, LASTCHANGED)) AS DOUBLE), -- Cast remaining columns to DOUBLE
     CAST(SETTLEMENTDATE AS TIMESTAMPTZ) AS SETTLEMENTDATE,
     CAST(SETTLEMENTDATE AS date) AS date,
     parse_filename(filename) AS file,
-    0 AS PRIORITY,
     year(CAST(SETTLEMENTDATE AS TIMESTAMPTZ)) AS YEAR
-  FROM raw
+  FROM RAW_price
   ORDER BY date

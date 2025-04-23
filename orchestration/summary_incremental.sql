@@ -1,8 +1,7 @@
--- materialized: (summary,delta,append)
-SET VARIABLE max_timestamp =
-    (SELECT max(cutoff)
-     FROM delta_scan('abfss://processing@onelake.dfs.fabric.microsoft.com/data.Lakehouse/Tables/aemo/summary'));
-CREATE or replace view duid as select * from delta_scan('abfss://processing@onelake.dfs.fabric.microsoft.com/data.Lakehouse/Tables/aemo/duid');
+-- materialized: (aemo,summary,append)
+
+SET VARIABLE max_timestamp =  (SELECT max(cutoff)  from summary );
+
 
 SELECT
     s.date,

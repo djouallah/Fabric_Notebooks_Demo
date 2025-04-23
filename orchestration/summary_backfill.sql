@@ -1,5 +1,5 @@
 
--- materialized: (summary,delta,overwrite)
+-- materialized: (aemo,summary,overwrite)
        select
         s.date,
         cast(strftime(s.SETTLEMENTDATE, '%H%M') AS INT16)                       as time ,

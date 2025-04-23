@@ -1,4 +1,16 @@
--- materialized: (price,parquet,append)
+-- materialized: (raw,price,append)
+SET VARIABLE list_of_files_price =
+(
+  WITH xxxx AS (
+    SELECT
+      concat('abfss://udf@onelake.dfs.fabric.microsoft.com/data.Lakehouse/Files/', extracted_filepath) AS file
+    FROM 'abfss://udf@onelake.dfs.fabric.microsoft.com/data.Lakehouse/Files/Reports/Current/Daily_Reports/download_log.csv'
+    WHERE parse_filename(extracted_filepath) NOT IN (SELECT DISTINCT file FROM price)
+    ORDER BY file
+    LIMIT 500
+  )
+  SELECT list(file) FROM xxxx
+);
    WITH raw AS (
         FROM READ_CSV(GETVARIABLE('list_of_files_price'),
             SKIP=1,

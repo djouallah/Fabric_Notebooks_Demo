@@ -1,4 +1,4 @@
--- materialized: (duid,delta,overwrite)
+-- materialized: (aemo,duid,overwrite)
 
 create or replace temp table duid_aemo as
 SELECT
@@ -6,7 +6,7 @@ SELECT
     first(Region) as Region,
     first("Fuel Source - Descriptor") as FuelSourceDescriptor,
     first(Participant) as Participant
-from read_xlsx('https://www.aemo.com.au/-/media/Files/Electricity/NEM/Participant_Information/NEM-Registration-and-Exemption-List.xls',
+from read_xlsx("/lakehouse/default/Files/raw/NEM-Registration-and-Exemption-List.xls",
     sheet='PU and Scheduled Loads',
     ALL_VARCHAR=true
 )
