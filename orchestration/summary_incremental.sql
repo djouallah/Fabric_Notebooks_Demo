@@ -1,4 +1,4 @@
--- materialized: (aemo,summary,append)
+-- materialized: (summary,append)
 
 SET VARIABLE max_timestamp =  (SELECT max(cutoff)  from summary );
 

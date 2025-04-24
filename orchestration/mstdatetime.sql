@@ -1,4 +1,4 @@
--- materialized: (aemo,mstdatetime,ignore)
+-- materialized: (mstdatetime,ignore)
     SELECT
         CAST(UNNEST(GENERATE_SERIES(CAST('2018-04-01' AS DATE), CAST('2026-12-31' AS DATE), INTERVAL 5 MINUTE)) AS TIMESTAMPTZ) AS SETTLEMENTDATE,
         STRFTIME(SETTLEMENTDATE, '%I:%M:%S %p') AS time,

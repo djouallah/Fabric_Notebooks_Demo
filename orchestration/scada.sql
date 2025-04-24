@@ -1,4 +1,5 @@
--- materialized: (raw,scada,append)
+-- materialized: (scada,append)
+CREATE VIEW if not exists scada(file) AS SELECT 'dummy';
 SET VARIABLE list_of_files_scada =
 (
   WITH xxxx AS (
@@ -7,7 +8,7 @@ SET VARIABLE list_of_files_scada =
     FROM 'abfss://udf@onelake.dfs.fabric.microsoft.com/data.Lakehouse/Files/Reports/Current/Daily_Reports/download_log.csv'
     WHERE parse_filename(extracted_filepath) NOT IN (SELECT DISTINCT file FROM scada)
     ORDER BY file
-    LIMIT 500
+    LIMIT 50
   )
   SELECT list(file) FROM xxxx
 );

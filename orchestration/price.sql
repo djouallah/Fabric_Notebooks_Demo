@@ -1,4 +1,6 @@
--- materialized: (raw,price,append)
+-- materialized: (price,append)
+
+CREATE VIEW if not exists price(file) AS SELECT 'dummy';
 SET VARIABLE list_of_files_price =
 (
   WITH xxxx AS (
@@ -7,7 +9,7 @@ SET VARIABLE list_of_files_price =
     FROM 'abfss://udf@onelake.dfs.fabric.microsoft.com/data.Lakehouse/Files/Reports/Current/Daily_Reports/download_log.csv'
     WHERE parse_filename(extracted_filepath) NOT IN (SELECT DISTINCT file FROM price)
     ORDER BY file
-    LIMIT 500
+    LIMIT 50
   )
   SELECT list(file) FROM xxxx
 );

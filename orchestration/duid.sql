@@ -1,4 +1,4 @@
--- materialized: (aemo,duid,overwrite)
+-- materialized: (duid,overwrite)
 
 create or replace temp table duid_aemo as
 SELECT
