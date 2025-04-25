@@ -1,53 +1,61 @@
 -- materialized: (duid,overwrite)
-
-create or replace temp table duid_aemo as
+WITH
+  duid_aemo AS (
+    SELECT
+      DUID AS DUID,
+      first(Region) AS Region,
+      first("Fuel Source - Descriptor") AS FuelSourceDescriptor,
+      first(Participant) AS Participant
+    FROM 'abfss://udf@onelake.dfs.fabric.microsoft.com/data.Lakehouse/Files/raw/nem-registration-and-exemption-list_PU_and_Scheduled_Loads.csv',
+    
+    WHERE
+      length(DUID) > 2
+    GROUP BY
+      DUID
+  ),
+  states AS (
+    SELECT 'WA1' AS RegionID, 'Western Australia' AS States
+    UNION ALL SELECT 'QLD1', 'Queensland'
+    UNION ALL SELECT 'NSW1', 'New South Walles'
+    UNION ALL SELECT 'TAS1', 'Tasmania'
+    UNION ALL SELECT 'SA1', 'South Australia'
+    UNION ALL SELECT 'VIC1', 'Victoria'
+  ),
+  x AS (
+    SELECT
+      'WA1' AS Region,
+      "Facility Code" AS DUID,
+      "Participant Name" AS Participant
+    FROM read_csv_auto('https://data.wa.aemo.com.au/datafiles/post-facilities/facilities.csv')
+  ),
+  tt AS (
+    SELECT
+      *
+    FROM read_csv_auto('https://github.com/djouallah/aemo_fabric/raw/main/WA_ENERGY.csv', header = 1)
+  ),
+  duid_wa AS (
+    SELECT
+      x.DUID,
+      x.Region,
+      Technology AS FuelSourceDescriptor,
+      x.Participant
+    FROM x
+    LEFT JOIN tt ON x.DUID = tt.DUID
+  ),
+  duid_all AS (
+    SELECT
+      *
+    FROM duid_aemo
+    UNION ALL
+    SELECT
+      *
+    FROM duid_wa
+  )
 SELECT
-    DUID as DUID,
-    first(Region) as Region,
-    first("Fuel Source - Descriptor") as FuelSourceDescriptor,
-    first(Participant) as Participant
-from read_xlsx("/lakehouse/default/Files/raw/NEM-Registration-and-Exemption-List.xls",
-    sheet='PU and Scheduled Loads',
-    ALL_VARCHAR=true
-)
-where length(DUID) > 2
-group by DUID;
-
-create or replace temp table states(RegionID varchar, States varchar);
-
-insert into states values
-    ('WA1', 'Western Australia'),
-    ('QLD1', 'Queensland'),
-    ('NSW1', 'New South Walles'),
-    ('TAS1', 'Tasmania'),
-    ('SA1', 'South Australia'),
-    ('VIC1', 'Victoria');
-
-create or replace temp table duid_final as
-with x as (
-    select 'WA1' as Region, "Facility Code" as DUID, "Participant Name" as Participant
-    from read_csv_auto('https://data.wa.aemo.com.au/datafiles/post-facilities/facilities.csv')
-),
-tt as (
-    select *
-    from read_csv_auto('https://github.com/djouallah/aemo_fabric/raw/main/WA_ENERGY.csv', header=1)
-),
-duid_wa as (
-    select x.DUID, x.Region, Technology as FuelSourceDescriptor, x.Participant
-    from x
-    left join tt on x.DUID = tt.DUID
-),
-duid_all as (
-    select * from duid_aemo
-    union all
-    select * from duid_wa
-)
-select
-    DUID,
-    Region,
-    FuelSourceDescriptor,
-    Participant,
-    states.States as State
-from duid_all a
-join states on a.Region = states.RegionID;
-select * from duid_final
+  DUID,
+  Region,
+  FuelSourceDescriptor,
+  Participant,
+  states.States AS State
+FROM duid_all a
+JOIN states ON a.Region = states.RegionID;
