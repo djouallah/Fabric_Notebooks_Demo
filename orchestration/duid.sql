@@ -54,7 +54,7 @@ WITH
 SELECT
   DUID,
   Region,
-  FuelSourceDescriptor,
+  UPPER(LEFT(TRIM(FuelSourceDescriptor), 1)) || LOWER(SUBSTR(TRIM(FuelSourceDescriptor), 2)) AS FuelSourceDescriptor,
   Participant,
   states.States AS State
 FROM duid_all a
