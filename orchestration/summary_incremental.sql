@@ -1,5 +1,7 @@
 -- materialized: (summary,append)
 
+CREATE VIEW if not exists summary(cutoff) AS SELECT '1900-01-01';
+
 SET VARIABLE max_timestamp =  (SELECT max(cutoff)  from summary );
 
 
