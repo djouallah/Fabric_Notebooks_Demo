@@ -8,7 +8,7 @@ SET VARIABLE list_of_files_scada_today =
     FROM 'abfss://udf@onelake.dfs.fabric.microsoft.com/data.Lakehouse/Files/Reports/Current/Dispatch_SCADA/download_log.csv'
     WHERE parse_filename(extracted_filepath) NOT IN (SELECT DISTINCT file FROM scada_today)
     ORDER BY file
-    LIMIT 5000
+    LIMIT 500
   )
   SELECT list(file) FROM xxxx
 );
