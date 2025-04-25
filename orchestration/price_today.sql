@@ -8,7 +8,7 @@ SET VARIABLE list_of_files_price_today =
     FROM 'abfss://udf@onelake.dfs.fabric.microsoft.com/data.Lakehouse/Files/Reports/Current/DispatchIS_Reports/download_log.csv'
     WHERE parse_filename(extracted_filepath) NOT IN (SELECT DISTINCT file FROM price_today)
     ORDER BY file
-    LIMIT 5000
+    LIMIT 500
   )
   SELECT list(file) FROM xxxx
 );
