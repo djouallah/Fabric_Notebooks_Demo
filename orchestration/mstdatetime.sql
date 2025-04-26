@@ -1,7 +1,9 @@
 -- materialized: (mstdatetime,ignore)
+WITH data AS (
     SELECT
-        CAST(UNNEST(GENERATE_SERIES(CAST('2018-04-01' AS DATE), CAST('2026-12-31' AS DATE), INTERVAL 5 MINUTE)) AS TIMESTAMPTZ) AS SETTLEMENTDATE,
-        STRFTIME(SETTLEMENTDATE, '%I:%M:%S %p') AS time,
-        CAST(SETTLEMENTDATE AS DATE) AS date,
-        EXTRACT(YEAR FROM date) AS year,
-        EXTRACT(MONTH FROM date) AS month
+        UNNEST(GENERATE_SERIES('2023-01-01 00:00:00'::TIMESTAMPTZ, '2023-01-01 23:55:00'::TIMESTAMPTZ, INTERVAL 5 MINUTE)) AS interval_time
+)
+SELECT
+    CAST(STRFTIME(interval_time, '%H%M') AS INT16) AS time,
+    CAST(STRFTIME(interval_time, '%H') AS INT16) AS hour
+FROM data;
