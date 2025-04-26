@@ -8,7 +8,7 @@ SET VARIABLE list_of_files_scada =
     FROM 'abfss://udf@onelake.dfs.fabric.microsoft.com/data.Lakehouse/Files/Reports/Current/Daily_Reports/download_log.csv'
     WHERE parse_filename(extracted_filepath) NOT IN (SELECT DISTINCT file FROM scada)
     ORDER BY file
-    LIMIT 500
+    --LIMIT 500
   )
   SELECT list(file) FROM xxxx
 );
@@ -91,4 +91,4 @@ SELECT
     CAST(SETTLEMENTDATE AS TIMESTAMPTZ) AS SETTLEMENTDATE,
     CAST(SETTLEMENTDATE AS DATE) AS date,
     YEAR(CAST(SETTLEMENTDATE AS TIMESTAMP)) AS YEAR
-FROM raw order by date 
+FROM raw
