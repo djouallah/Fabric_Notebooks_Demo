@@ -1,4 +1,3 @@
--- materialized: (duid,overwrite)
 WITH
   duid_aemo AS (
     SELECT
