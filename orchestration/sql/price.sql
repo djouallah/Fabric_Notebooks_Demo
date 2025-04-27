@@ -1,5 +1,3 @@
--- materialized: (price,append)
-
 CREATE VIEW if not exists price(file) AS SELECT 'dummy';
 SET VARIABLE list_of_files_price =
 (
