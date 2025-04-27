@@ -1,4 +1,3 @@
--- materialized: (mstdatetime,ignore)
 WITH data AS (
     SELECT
         UNNEST(GENERATE_SERIES('2023-01-01 00:00:00'::TIMESTAMPTZ, '2023-01-01 23:55:00'::TIMESTAMPTZ, INTERVAL 5 MINUTE)) AS interval_time
