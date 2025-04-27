@@ -1,4 +1,3 @@
--- materialized: (scada_today,append)
 CREATE VIEW if not exists scada_today(file) AS SELECT 'dummy';
 SET VARIABLE list_of_files_scada_today =
 (
