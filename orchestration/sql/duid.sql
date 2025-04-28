@@ -49,12 +49,21 @@ WITH
     SELECT
       *
     FROM duid_wa
-  )
+  ),
+geo as(
+  select duid, max(latitude) as latitude,max(longitude) as longitude from
+  read_csv('https://docs.google.com/spreadsheets/d/e/2PACX-1vR_I3U-f2DtY4ex8QXV_S1T19JYy58__nz52Ra6Mm10r3_vJik5OrvQecN-pFWfjUbIE6m0wMl_R6kL/pub?gid=0&single=true&output=csv')
+
+  where latitude is not null
+group by all)
 SELECT
-  DUID,
+  a.DUID,
   Region,
   UPPER(LEFT(TRIM(FuelSourceDescriptor), 1)) || LOWER(SUBSTR(TRIM(FuelSourceDescriptor), 2)) AS FuelSourceDescriptor,
   Participant,
-  states.States AS State
+  states.States AS State,
+  geo.latitude,
+  geo.longitude
 FROM duid_all a
-JOIN states ON a.Region = states.RegionID;
+JOIN states ON a.Region = states.RegionID
+left JOIN geo ON a.duid = geo.duid;
