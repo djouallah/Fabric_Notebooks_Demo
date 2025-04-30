@@ -1,0 +1,142 @@
+  - Always use the defined semantic model for all query generation, reasoning, or analysis.
+  - Use only the measures, dimensions, and relationships explicitly defined in the semantic model.
+  - Never join fact tables directly; use shared dimensions as join bridges.
+  - Prefer named measures over repeating raw expressions.
+  - Always respect the star schema layout.
+  - Do not assume columns or relationships not explicitly defined here.
+  - return answer in duckdb sql
+  - use kimball approach for generating sql queries. 
+
+semantic_model:
+  measures:
+    - name: total_sales
+      expression: SUM(store_sales.ss_sales_price * store_sales.ss_quantity)
+      description: "Total sales revenue across all transactions."
+
+    - name: total_quantity
+      expression: SUM(store_sales.ss_quantity)
+      description: "Total number of items sold."
+
+    - name: total_returns
+      expression: SUM(store_returns.sr_return_amt)
+      description: "Total value of returned items."
+
+    - name: net_sales
+      expression: SUM(store_sales.ss_sales_price * store_sales.ss_quantity) - SUM(store_returns.sr_return_amt)
+      description: "Net sales revenue after accounting for returns."
+
+    - name: return_rate
+      expression: (SUM(store_returns.sr_return_amt) / NULLIF(SUM(store_sales.ss_sales_price * store_sales.ss_quantity), 0)) * 100
+      description: "Return amount as a percentage of total sales."
+
+  dimensions:
+    date_dim:
+      primary_key: d_date_sk
+      columns:
+        - name: d_year
+          type: integer
+          sample_values: [2001, 2010, 2023]
+        - name: d_moy
+          type: integer
+          sample_values: [1, 6, 12]
+        - name: d_dow
+          type: integer
+          sample_values: [1, 4, 7]
+        - name: d_dom
+          type: integer
+          sample_values: [5, 15, 25]
+        - name: d_qoy
+          type: integer
+          sample_values: [1, 2, 4]
+        - name: d_holiday
+          type: boolean
+          sample_values: ["Y", "N"]
+        - name: d_weekend
+          type: boolean
+          sample_values: ["Y", "N"]
+
+    store:
+      primary_key: s_store_sk
+      columns:
+        - name: s_store_name
+          type: string
+          sample_values: ["SuperMart", "MegaStore", "MarketY"]
+        - name: s_number_employees
+          type: integer
+          sample_values: [120, 245, 300]
+        - name: s_floor_space
+          type: integer
+          sample_values: [4500000, 5250760, 6000000]
+        - name: s_hours
+          type: string
+          sample_values: ["9AM-5PM", "8AM-4PM", "10AM-6PM"]
+        - name: s_manager
+          type: string
+          sample_values: ["Emily Johnson", "Michael Smith", "William Ward"]
+        - name: s_city
+          type: string
+          sample_values: ["Centerville", "Midway", "Springfield"]
+        - name: s_state
+          type: string
+          sample_values: ["NY", "TN", "CA"]
+        - name: s_country
+          type: string
+          sample_values: ["United States", "Canada", "Mexico"]
+
+    customer:
+      primary_key: c_customer_sk
+      columns:
+        - name: c_birth_year
+          type: integer
+          sample_values: [1932, 1985, 2000]
+        - name: c_birth_country
+          type: string
+          sample_values: ["USA", "INDIA", "CAMEROON"]
+        - name: c_preferred_cust_flag
+          type: boolean
+          sample_values: ["Y", "N"]
+
+    item:
+      primary_key: i_item_sk
+      columns:
+        - name: i_item_desc
+          type: string
+          sample_values: ["High-quality laptop.", "Gaming keyboard.", "Wireless mouse."]
+        - name: i_brand
+          type: string
+          sample_values: ["BrandA", "BrandB", "BrandC"]
+        - name: i_class
+          type: string
+          sample_values: ["Electronics", "Accessories", "Peripherals"]
+        - name: i_category
+          type: string
+          sample_values: ["Computers", "Gadgets", "Office"]
+        - name: i_color
+          type: string
+          sample_values: ["Black", "White", "Gray"]
+        - name: i_units
+          type: string
+          sample_values: ["pcs", "boxes", "sets"]
+        - name: i_container
+          type: string
+          sample_values: ["Box", "Plastic", "None"]
+        - name: i_product_name
+          type: string
+          sample_values: ["UltraBook X", "ProKey Keyboard", "ErgoMouse"]
+
+  fact_tables:
+    - name: store_sales
+      description: "Fact table containing all store sales transactions."
+      foreign_keys:
+        - ss_store_sk → store.s_store_sk
+        - ss_customer_sk → customer.c_customer_sk
+        - ss_item_sk → item.i_item_sk
+        - ss_sold_date_sk → date_dim.d_date_sk
+
+    - name: store_returns
+      description: "Fact table capturing product returns."
+      foreign_keys:
+        - sr_store_sk → store.s_store_sk
+        - sr_customer_sk → customer.c_customer_sk
+        - sr_item_sk → item.i_item_sk
+        - sr_returned_date_sk → date_dim.d_date_sk
