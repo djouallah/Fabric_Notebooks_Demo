@@ -4,7 +4,7 @@
   - Prefer named measures over repeating raw expressions.
   - Always respect the star schema layout.
   - Do not assume columns or relationships not explicitly defined here.
-  - return answer in duckdb sql
+  - return answer in duckdb sql and write the question as a sql comment
   - use kimball approach for generating sql queries. 
 
 semantic_model:
