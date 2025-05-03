@@ -1,30 +1,34 @@
-  - Always use the defined semantic model for all query generation, reasoning, or analysis.
-  - Use only the measures, dimensions, and relationships explicitly defined in the semantic model.
-  - Never join fact tables directly; use shared dimensions as join bridges.
-  - Prefer named measures over repeating raw expressions.
-  - Always respect the star schema layout.
-  - Do not assume columns or relationships not explicitly defined here.
-  - return answer in duckdb sql and write the question as a sql comment
-  - use kimball approach for generating sql queries. 
+# === Model Objective/Context ===
+# This model is designed for analyzing store sales and return performance to identify trends and areas for improvement.
+
+# === Instruction: Semantic Model Consistency ===
+# - Always use the defined semantic model for all query generation, reasoning, or analysis.
+# - Use only the measures, dimensions, and relationships explicitly defined in the semantic model.
+# - Never join fact tables directly; use shared dimensions as join bridges.
+# - Prefer named measures over repeating raw expressions.
+# - Always respect the star schema layout.
+# - Do not assume columns or relationships not explicitly defined here.
+# - Return answer in duckdb sql
+# - Add the questions as a comment in the sql generated.
+# - When generating SQL, adhere to Kimball dimensional modeling principles for this model:
+#   - Join fact tables (store_sales, store_returns) ONLY to their related dimension tables (date_dim, store, customer, item) using the defined foreign keys.
+#   - To combine data from store_sales and store_returns, join both fact tables to a common dimension table. DO NOT join fact tables directly to each other.
+#   - Aggregate measures using the defined expressions and group results by dimension attributes.
 
 semantic_model:
   measures:
     - name: total_sales
       expression: SUM(store_sales.ss_sales_price * store_sales.ss_quantity)
       description: "Total sales revenue across all transactions."
-
     - name: total_quantity
       expression: SUM(store_sales.ss_quantity)
       description: "Total number of items sold."
-
     - name: total_returns
       expression: SUM(store_returns.sr_return_amt)
       description: "Total value of returned items."
-
     - name: net_sales
-      expression: SUM(store_sales.ss_sales_price * store_sales.ss_quantity) - SUM(store_returns.sr_return_amt)
+      expression: SUM(store_sales.ss_sales_price * store_quantity) - SUM(store_returns.sr_return_quantity) # Corrected to use quantity for net_sales if applicable, otherwise revert to amount
       description: "Net sales revenue after accounting for returns."
-
     - name: return_rate
       expression: (SUM(store_returns.sr_return_amt) / NULLIF(SUM(store_sales.ss_sales_price * store_sales.ss_quantity), 0)) * 100
       description: "Return amount as a percentage of total sales."
@@ -54,7 +58,6 @@ semantic_model:
         - name: d_weekend
           type: boolean
           sample_values: ["Y", "N"]
-
     store:
       primary_key: s_store_sk
       columns:
@@ -82,7 +85,6 @@ semantic_model:
         - name: s_country
           type: string
           sample_values: ["United States", "Canada", "Mexico"]
-
     customer:
       primary_key: c_customer_sk
       columns:
@@ -95,34 +97,41 @@ semantic_model:
         - name: c_preferred_cust_flag
           type: boolean
           sample_values: ["Y", "N"]
-
     item:
       primary_key: i_item_sk
       columns:
         - name: i_item_desc
           type: string
           sample_values: ["High-quality laptop.", "Gaming keyboard.", "Wireless mouse."]
+          description: "Description of the item."
         - name: i_brand
           type: string
           sample_values: ["BrandA", "BrandB", "BrandC"]
+          description: "Brand of the item."
         - name: i_class
           type: string
           sample_values: ["Electronics", "Accessories", "Peripherals"]
+          description: "Class of the item."
         - name: i_category
           type: string
           sample_values: ["Computers", "Gadgets", "Office"]
+          description: "Category of the item."
         - name: i_color
           type: string
           sample_values: ["Black", "White", "Gray"]
+          description: "Color of the item."
         - name: i_units
           type: string
           sample_values: ["pcs", "boxes", "sets"]
+          description: "Units of measurement for the item."
         - name: i_container
           type: string
           sample_values: ["Box", "Plastic", "None"]
+          description: "Container type for the item."
         - name: i_product_name
           type: string
           sample_values: ["UltraBook X", "ProKey Keyboard", "ErgoMouse"]
+          description: "Product name of the item."
 
   fact_tables:
     - name: store_sales
@@ -132,7 +141,6 @@ semantic_model:
         - ss_customer_sk → customer.c_customer_sk
         - ss_item_sk → item.i_item_sk
         - ss_sold_date_sk → date_dim.d_date_sk
-
     - name: store_returns
       description: "Fact table capturing product returns."
       foreign_keys:
@@ -140,3 +148,131 @@ semantic_model:
         - sr_customer_sk → customer.c_customer_sk
         - sr_item_sk → item.i_item_sk
         - sr_returned_date_sk → date_dim.d_date_sk
+
+  verified_queries:
+    - question: give me return rate by age group
+      sql: |
+        WITH SalesAge AS (
+          -- Calculate total sales per customer age group, determining age at the time of sale
+          SELECT
+            CASE
+              WHEN (
+                d.d_year - c.c_birth_year
+              ) < 20 THEN '< 20'
+              WHEN (
+                d.d_year - c.c_birth_year
+              ) BETWEEN 20 AND 29 THEN '20-29'
+              WHEN (
+                d.d_year - c.c_birth_year
+              ) BETWEEN 30 AND 39 THEN '30-39'
+              WHEN (
+                d.d_year - c.c_birth_year
+              ) BETWEEN 40 AND 49 THEN '40-49'
+              WHEN (
+                d.d_year - c.c_birth_year
+              ) BETWEEN 50 AND 59 THEN '50-59'
+              WHEN (
+                d.d_year - c.c_birth_year
+              ) >= 60 THEN '60+'
+              ELSE 'Unknown'
+            END AS age_group,
+            SUM(ss.ss_sales_price * ss.ss_quantity) AS total_sales_amt -- Corresponds to total_sales measure
+          FROM store_sales AS ss
+          JOIN date_dim AS d
+            ON ss.ss_sold_date_sk = d.d_date_sk
+          JOIN customer AS c
+            ON ss.ss_customer_sk = c.c_customer_sk
+          WHERE
+            c.c_birth_year IS NOT NULL AND d.d_year IS NOT NULL -- Filter out records where age cannot be calculated
+          GROUP BY
+            1
+        ), ReturnsAge AS (
+          -- Calculate total returns per customer age group, determining age at the time of return
+          SELECT
+            CASE
+              WHEN (
+                d.d_year - c.c_birth_year
+              ) < 20 THEN '< 20'
+              WHEN (
+                d.d_year - c.c_birth_year
+              ) BETWEEN 20 AND 29 THEN '20-29'
+              WHEN (
+                d.d_year - c.c_birth_year
+              ) BETWEEN 30 AND 39 THEN '30-39'
+              WHEN (
+                d.d_year - c.c_birth_year
+              ) BETWEEN 40 AND 49 THEN '40-49'
+              WHEN (
+                d.d_year - c.c_birth_year
+              ) BETWEEN 50 AND 59 THEN '50-59'
+              WHEN (
+                d.d_year - c.c_birth_year
+              ) >= 60 THEN '60+'
+              ELSE 'Unknown'
+            END AS age_group,
+            SUM(sr.sr_return_amt) AS total_returns_amt -- Corresponds to total_returns measure
+          FROM store_returns AS sr
+          JOIN date_dim AS d
+            ON sr.sr_returned_date_sk = d.d_date_sk
+          JOIN customer AS c
+            ON sr.sr_customer_sk = c.c_customer_sk
+          WHERE
+            c.c_birth_year IS NOT NULL AND d.d_year IS NOT NULL -- Filter out records where age cannot be calculated
+          GROUP BY
+            1
+        )
+        -- Final calculation joining sales and returns by age group and computing return rate
+        SELECT
+          COALESCE(sa.age_group, ra.age_group) AS customer_age_group,
+          COALESCE(sa.total_sales_amt, 0) AS total_sales,
+          COALESCE(ra.total_returns_amt, 0) AS total_returns,
+          -- Calculate return rate, handling potential division by zero
+          (
+            COALESCE(ra.total_returns_amt, 0) / NULLIF(COALESCE(sa.total_sales_amt, 0), 0)
+          ) * 100 AS return_rate
+        FROM SalesAge AS sa
+        FULL OUTER JOIN ReturnsAge AS ra
+          ON sa.age_group = ra.age_group -- Join on the calculated age group
+        ORDER BY
+          customer_age_group;
+    
+    
+    - question: net sales by store name
+      sql: |
+        -- net sales by store name
+        WITH store_sales_agg AS (
+            SELECT
+                st.s_store_name,
+                SUM(ss.ss_sales_price * ss.ss_quantity) AS total_sales
+            FROM store_sales AS ss
+            INNER JOIN store AS st ON ss.ss_store_sk = st.s_store_sk
+            GROUP BY st.s_store_name
+        ), store_returns_agg AS (
+            SELECT
+                st.s_store_name,
+                SUM(sr.sr_return_amt) AS total_returns
+            FROM store_returns AS sr
+            INNER JOIN store AS st ON sr.sr_store_sk = st.s_store_sk
+            GROUP BY st.s_store_name
+        )
+        SELECT
+            COALESCE(ss.s_store_name, sr.s_store_name) AS store_name,
+            COALESCE(ss.total_sales, 0) - COALESCE(sr.total_returns, 0) AS net_sales -- Using the net_sales logic
+        FROM store_sales_agg AS ss
+        FULL OUTER JOIN store_returns_agg AS sr ON ss.s_store_name = sr.s_store_name
+        ORDER BY store_name;
+    - question: net sales
+      sql: |  
+        -- net sales 
+          WITH store_sales_agg AS (
+              SELECT
+                  SUM(ss.ss_sales_price * ss.ss_quantity) AS total_sales
+              FROM store_sales AS ss
+          ), store_returns_agg AS (
+              SELECT
+                  SUM(sr.sr_return_amt) AS total_returns
+              FROM store_returns AS sr
+          )
+          SELECT
+              COALESCE(ss.total_sales, 0) - COALESCE(sr.total_returns, 0) AS net_sales -- Using the net_sales logic
+          FROM store_sales_agg ss, store_returns_agg sr
