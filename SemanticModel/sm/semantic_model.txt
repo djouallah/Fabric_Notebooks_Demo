@@ -1,3 +1,4 @@
+#  "/no_think"
 # === Model Objective/Context ===
 # This model is designed for analyzing store sales and return performance to identify trends and areas for improvement.
 
@@ -263,16 +264,26 @@ semantic_model:
         ORDER BY store_name;
     - question: net sales
       sql: |  
-        -- net sales 
-          WITH store_sales_agg AS (
-              SELECT
-                  SUM(ss.ss_sales_price * ss.ss_quantity) AS total_sales
-              FROM store_sales AS ss
-          ), store_returns_agg AS (
-              SELECT
-                  SUM(sr.sr_return_amt) AS total_returns
-              FROM store_returns AS sr
-          )
-          SELECT
-              COALESCE(ss.total_sales, 0) - COALESCE(sr.total_returns, 0) AS net_sales -- Using the net_sales logic
-          FROM store_sales_agg ss, store_returns_agg sr
+        -- net sales by store name
+            WITH store_sales_agg AS (
+                SELECT
+                    st.s_store_name,
+                    SUM(ss.ss_sales_price * ss.ss_quantity) AS total_sales
+                FROM store_sales AS ss
+                INNER JOIN store AS st ON ss.ss_store_sk = st.s_store_sk
+                GROUP BY st.s_store_name
+            ), store_returns_agg AS (
+                SELECT
+                    st.s_store_name,
+                    SUM(sr.sr_return_amt) AS total_returns
+                FROM store_returns AS sr
+                INNER JOIN store AS st ON sr.sr_store_sk = st.s_store_sk
+                GROUP BY st.s_store_name
+            )
+            SELECT
+                COALESCE(ss.s_store_name, sr.s_store_name) AS store_name,
+                sum(COALESCE(ss.total_sales, 0) - COALESCE(sr.total_returns, 0) ) AS net_sales -- Using the net_sales logic
+            FROM store_sales_agg AS ss
+            FULL OUTER JOIN store_returns_agg AS sr ON ss.s_store_name = sr.s_store_name
+            group by store_name
+            ORDER BY store_name;
