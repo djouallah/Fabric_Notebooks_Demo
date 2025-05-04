@@ -277,9 +277,8 @@ semantic_model:
         SELECT
             COALESCE(ss.total_sales, 0) - COALESCE(sr.total_returns, 0) AS net_sales -- Using the net_sales logic
         FROM store_sales_agg ss, store_returns_agg sr
-    - question: net sales
+    - question: return rate
       sql: |   
-
               -- return rate
               WITH store_sales_agg AS (
                   SELECT
