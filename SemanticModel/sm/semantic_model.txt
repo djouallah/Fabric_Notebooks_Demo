@@ -94,7 +94,7 @@ semantic_model:
           sample_values: [1932, 1985, 2000]
         - name: c_birth_country
           type: string
-          sample_values: ["USA", "INDIA", "CAMEROON"]
+          sample_values: ["UNITED STATES", "INDIA", "CAMEROON"]
         - name: c_preferred_cust_flag
           type: boolean
           sample_values: ["Y", "N"]
