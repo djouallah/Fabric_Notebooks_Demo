@@ -277,3 +277,19 @@ semantic_model:
         SELECT
             COALESCE(ss.total_sales, 0) - COALESCE(sr.total_returns, 0) AS net_sales -- Using the net_sales logic
         FROM store_sales_agg ss, store_returns_agg sr
+    - question: net sales
+      sql: |   
+
+              -- return rate
+              WITH store_sales_agg AS (
+                  SELECT
+                      SUM(ss.ss_sales_price * ss.ss_quantity) AS total_sales
+                  FROM store_sales AS ss
+              ), store_returns_agg AS (
+                  SELECT
+                      SUM(sr.sr_return_amt) AS total_returns
+                  FROM store_returns AS sr
+              )
+              SELECT
+                  (COALESCE(sr.total_returns, 0) / NULLIF(COALESCE(ss.total_sales, 0), 0))  * 100 AS return_rate
+              FROM store_sales_agg ss, store_returns_agg sr
