@@ -3,6 +3,7 @@
 # This model is designed for analyzing store sales and return performance to identify trends and areas for improvement.
 
 # === Instruction: Semantic Model Consistency ===
+#   You are a SQL query generator. Given a user query, generate a single, correct SQL query based on the provided semantic model
 # - Always use the defined semantic model for all query generation, reasoning, or analysis.
 # - Use only the measures, dimensions, and relationships explicitly defined in the semantic model.
 # - Never join fact tables directly; use shared dimensions as join bridges.
