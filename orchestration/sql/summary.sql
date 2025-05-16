@@ -26,12 +26,13 @@ incremental AS (
         max(p.RRP)  AS price
     FROM scada_today s
     JOIN duid d ON s.DUID = d.DUID
-    JOIN (SELECT * FROM price_today WHERE INTERVENTION = 0 ) p
+    JOIN (SELECT * FROM price_today WHERE INTERVENTION = 0  and date  >= cast(getvariable('max_timestamp') as date)) p
         ON s.SETTLEMENTDATE = p.SETTLEMENTDATE AND d.Region = p.REGIONID
     WHERE
         s.INTERVENTION = 0
         AND INITIALMW <> 0
         AND p.INTERVENTION = 0
+        AND s.date           >= cast(getvariable('max_timestamp') as date)
         AND s.settlementdate > getvariable('max_timestamp')
         AND p.settlementdate > getvariable('max_timestamp')
     GROUP BY ALL
