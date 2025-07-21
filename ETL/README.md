@@ -12,4 +12,9 @@ the script will download 60 files, around 4 GB uncompressed, you can duplicate t
 
 <img width="1008" height="482" alt="image" src="https://github.com/user-attachments/assets/2126f91c-1172-4e32-a87b-3bd2bb047671" />
 
+I queried the results using Fabric dwh to verify, they are all returning the same numbers
+
+<img width="758" height="431" alt="image" src="https://github.com/user-attachments/assets/8a8525d1-8151-432f-8491-a4595daf2a9e" />
+
+
 
