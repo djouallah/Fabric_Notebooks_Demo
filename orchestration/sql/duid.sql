@@ -57,7 +57,7 @@ geo as(
   where latitude is not null
 group by all)
 SELECT
-  a.DUID,
+  distinct(a.DUID) as DUID,
   Region,
   UPPER(LEFT(TRIM(FuelSourceDescriptor), 1)) || LOWER(SUBSTR(TRIM(FuelSourceDescriptor), 2)) AS FuelSourceDescriptor,
   Participant,
