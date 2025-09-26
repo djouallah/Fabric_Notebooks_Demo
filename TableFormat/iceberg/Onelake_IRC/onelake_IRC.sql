@@ -1,5 +1,5 @@
 -- this is a hack for now, run the bat file to get a token, please vote for this idea https://github.com/duckdb/duckdb-iceberg/issues/499
-set variable endpoint = 'https://onelake.table.fabric.microsoft.com/iceberg'
+set variable endpoint = 'https://onelake.table.fabric.microsoft.com/iceberg' ;
 -- Read and clean token, store in variable
 SET variable tokeng = (
   SELECT
