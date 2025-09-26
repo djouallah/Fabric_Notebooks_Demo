@@ -9,7 +9,7 @@ from obstore.store import from_url
 
 
 
-def download_excel( folder: str, ws: str, lh:str) -> str:
+def download_excel( folder: str, ws: str, lh:str) :
     """Download files from URLs and save to object storage using obstore"""
     store = from_url(f'abfss://{ws}@onelake.dfs.fabric.microsoft.com/{lh}.Lakehouse/Files')
     if not folder.endswith("/"):
@@ -76,4 +76,4 @@ def download_excel( folder: str, ws: str, lh:str) -> str:
             except Exception as e:
                 logging.error(f"An unexpected error occurred for {url}: {e}")
 
-    return "\n".join(saved_paths)
+    return 1
