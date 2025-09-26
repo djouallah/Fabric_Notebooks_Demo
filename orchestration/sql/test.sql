@@ -3,8 +3,8 @@ SET VARIABLE list_of_files_price =
 (
   WITH xxxx AS (
     SELECT
-      concat('abfss://{ws}@onelake.dfs.fabric.microsoft.com/{lh}.Lakehouse/Files/', extracted_filepath) AS file
-    FROM 'abfss://{ws}@onelake.dfs.fabric.microsoft.com/{lh}.Lakehouse/Files/Reports/Current/Daily_Reports/download_log.csv'
+      concat('abfss://$ws@onelake.dfs.fabric.microsoft.com/$lh.Lakehouse/Files/', extracted_filepath) AS file
+    FROM 'abfss://$ws@onelake.dfs.fabric.microsoft.com/$lh.Lakehouse/Files/Reports/Current/Daily_Reports/download_log.csv'
     WHERE parse_filename(extracted_filepath) NOT IN (SELECT DISTINCT file FROM price)
     ORDER BY file
     -- LIMIT 1000
