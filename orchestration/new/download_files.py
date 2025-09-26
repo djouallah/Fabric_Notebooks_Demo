@@ -13,7 +13,7 @@ from obstore.store import from_url
 import threading
 
 
-def download_files(urls: List[str], folders: List[str], totalfiles: int, destination: str, max_workers: int) -> int:
+def download_files(urls: List[str], folders: List[str], totalfiles: int, ws: str,lh: str max_workers: int) -> int:
     """
     Optimized download function using obstore for OneLake operations.
 
@@ -27,7 +27,7 @@ def download_files(urls: List[str], folders: List[str], totalfiles: int, destina
     - totalfiles batching preserved
     - Fixed log reading/writing consistency
     """
-    store = from_url(destination)
+    store = from_url(f'abfss://{ws}@onelake.dfs.fabric.microsoft.com/{lh}.Lakehouse/Files')
     summary = []
     total_files_processed = 0
     
