@@ -9,9 +9,9 @@ from obstore.store import from_url
 
 
 
-def download_excel( folder: str, destination: str) -> str:
+def download_excel( folder: str, ws: str, lh:str) -> str:
     """Download files from URLs and save to object storage using obstore"""
-    store = from_url(destination)
+    store = from_url(f'abfss://{ws}@onelake.dfs.fabric.microsoft.com/{lh}.Lakehouse/Files')
     if not folder.endswith("/"):
         folder += "/"
 
