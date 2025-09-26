@@ -9,7 +9,7 @@ from obstore.store import from_url
 
 
 
-def download_to_storage(urls: list[str], folder: str, destination: str) -> str:
+def download_excel(urls: list[str], folder: str, destination: str) -> str:
     """Download files from URLs and save to object storage using obstore"""
     store = from_url(destination)
     if not folder.endswith("/"):
