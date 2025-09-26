@@ -10,6 +10,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Tuple
 import obstore
 from obstore.store import from_url
+import threading
 
 
 def download_files(urls: List[str], folders: List[str], totalfiles: int, destination: str, max_workers: int) -> str:
@@ -21,9 +22,13 @@ def download_files(urls: List[str], folders: List[str], totalfiles: int, destina
     - Log appends instead of overwriting order
     - Parallel downloads/uploads for speed
     - totalfiles batching preserved
+    - Fixed log reading/writing consistency
     """
     store = from_url(destination)
     summary = []
+    
+    # Thread lock for log operations
+    log_lock = threading.Lock()
 
     def process_url(url_folder_pair: Tuple[str, str]) -> str:
         url, folder = url_folder_pair
@@ -34,15 +39,27 @@ def download_files(urls: List[str], folders: List[str], totalfiles: int, destina
 
         log_file_name = clean_folder + "download_log.csv"
 
-        # Step 1: Read log fresh from OneLake
-        downloaded_files = []
-        try:
-            log_data = obstore.get(store, log_file_name)
-            log_content = log_data.decode("utf-8").strip()
-            if log_content:
-                downloaded_files = [line.split(",")[0] for line in log_content.splitlines()[1:]]
-        except Exception:
-            downloaded_files = []
+        # Step 1: Read log fresh from OneLake (with lock to prevent race conditions)
+        with log_lock:
+            downloaded_files = set()  # Use set for O(1) lookups
+            try:
+                log_result = obstore.get(store, log_file_name)
+                # GetResult object - need to call .bytes() to get the actual data
+                log_bytes = log_result.bytes()
+                log_content = bytes(log_bytes).decode("utf-8").strip()
+                
+                if log_content:
+                    lines = log_content.splitlines()
+                    if len(lines) > 1:  # Skip header if exists
+                        for line in lines[1:]:
+                            if line.strip():
+                                # Extract zip filename (first column)
+                                parts = line.split(",", 1)
+                                if parts:
+                                    downloaded_files.add(parts[0].strip())
+            except Exception as e:
+                print(f"Could not read log file {log_file_name}: {e}")
+                downloaded_files = set()
 
         def extract_week_partition(filename: str) -> str:
             match = re.search(r"(\d{4})(\d{2})(\d{2})", filename)
@@ -55,17 +72,18 @@ def download_files(urls: List[str], folders: List[str], totalfiles: int, destina
 
         try:
             result = urlopen(url).read().decode("utf-8")
-        except Exception:
-            return f"{url} - Connection failed"
+        except Exception as e:
+            return f"{url} - Connection failed: {e}"
 
         pattern = re.compile(r"[\w.-]+\.zip")
         all_files = sorted(dict.fromkeys(pattern.findall(result)), reverse=True)
 
-        # Only files not already in the log
-        new_files = sorted(list(set(all_files) - set(downloaded_files)), reverse=True)[:totalfiles]
+        # Filter out already downloaded files
+        new_files = [f for f in all_files if f not in downloaded_files]
+        new_files = sorted(new_files, reverse=True)[:totalfiles]
 
         if not new_files:
-            return f"{url} - 0 files extracted (all up to date)"
+            return f"{url} - 0 files extracted (all {len(all_files)} files already downloaded)"
 
         uploaded_log_entries = []
         batch_uploads = []
@@ -75,11 +93,14 @@ def download_files(urls: List[str], folders: List[str], totalfiles: int, destina
                 download_url = url + filename
                 with requests.get(download_url, stream=True, timeout=30) as resp:
                     if not resp.ok:
+                        print(f"Failed to download {filename}: HTTP {resp.status_code}")
                         return None
                     zip_bytes = io.BytesIO(resp.content)
                     with zipfile.ZipFile(zip_bytes, "r") as zf:
                         results = []
                         for zip_info in zf.infolist():
+                            if zip_info.is_dir():
+                                continue
                             with zf.open(zip_info) as extracted:
                                 gzip_buffer = io.BytesIO()
                                 with gzip.GzipFile(filename=zip_info.filename, mode="wb", fileobj=gzip_buffer) as gz:
@@ -94,7 +115,7 @@ def download_files(urls: List[str], folders: List[str], totalfiles: int, destina
                 return None
 
         # Step 2: Parallelize file-level downloads
-        with ThreadPoolExecutor(max_workers=8) as pool:
+        with ThreadPoolExecutor(max_workers=min(8, len(new_files))) as pool:
             futures = [pool.submit(process_file, fn) for fn in new_files]
             for f in as_completed(futures):
                 res = f.result()
@@ -103,36 +124,56 @@ def download_files(urls: List[str], folders: List[str], totalfiles: int, destina
                         uploaded_log_entries.append((zipf, gzf))
                         batch_uploads.append((gzf, data))
 
+        if not batch_uploads:
+            return f"{url} - No files to upload"
+
         # Step 3: Parallelize uploads
-        with ThreadPoolExecutor(max_workers=8) as pool:
-            futures = [pool.submit(obstore.put, store, gz_filename, data) for gz_filename, data in batch_uploads]
-            for f in as_completed(futures):
+        successful_uploads = []
+        with ThreadPoolExecutor(max_workers=min(8, len(batch_uploads))) as pool:
+            futures = {pool.submit(obstore.put, store, gz_filename, data): (gz_filename, orig_filename) 
+                      for (gz_filename, data), (orig_filename, _) in zip(batch_uploads, uploaded_log_entries)}
+            
+            for future in as_completed(futures):
+                gz_filename, orig_filename = futures[future]
                 try:
-                    f.result()
+                    future.result()
+                    successful_uploads.append((orig_filename, gz_filename))
                 except Exception as e:
-                    print(f"Error uploading: {e}")
+                    print(f"Error uploading {gz_filename}: {e}")
 
-        # Step 4: Append to log
-        if uploaded_log_entries:
-            try:
-                existing_lines = []
+        # Step 4: Update log with only successful uploads
+        if successful_uploads:
+            with log_lock:
                 try:
-                    existing_log_data = obstore.get(store, log_file_name)
-                    existing_log = existing_log_data.decode("utf-8").strip()
-                    existing_lines = existing_log.splitlines()[1:] if existing_log else []
-                except:
+                    # Read current log state again (in case it was updated by another thread)
                     existing_lines = []
+                    try:
+                        existing_log_result = obstore.get(store, log_file_name)
+                        # GetResult object - need to call .bytes() to get the actual data
+                        existing_log_bytes = existing_log_result.bytes()
+                        existing_log = bytes(existing_log_bytes).decode("utf-8").strip()
+                            
+                        if existing_log:
+                            lines = existing_log.splitlines()
+                            if len(lines) > 1:  # Skip header
+                                existing_lines = lines[1:]
+                    except:
+                        pass
 
-                new_lines = [f"{zipf},{gzf}" for zipf, gzf in uploaded_log_entries]
-                all_log_lines = existing_lines + new_lines
-                log_content = "zip_filename,extracted_filepath\n" + "\n".join(all_log_lines)
+                    # Add new entries
+                    new_lines = [f"{zipf},{gzf}" for zipf, gzf in successful_uploads]
+                    all_log_lines = existing_lines + new_lines
+                    
+                    # Write updated log
+                    log_content = "zip_filename,extracted_filepath\n" + "\n".join(all_log_lines)
+                    obstore.put(store, log_file_name, log_content.encode("utf-8"))
+                    
+                    print(f"Updated log {log_file_name} with {len(successful_uploads)} new entries")
 
-                obstore.put(store, log_file_name, log_content.encode("utf-8"))
+                except Exception as e:
+                    print(f"Error updating log file {log_file_name}: {e}")
 
-            except Exception as e:
-                print(f"Error updating log file {log_file_name}: {e}")
-
-        return f"{url} - {len(uploaded_log_entries)} files extracted"
+        return f"{url} - {len(successful_uploads)} files extracted and uploaded"
 
     # Process URLs concurrently
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
