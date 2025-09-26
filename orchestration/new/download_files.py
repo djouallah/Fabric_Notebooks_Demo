@@ -13,9 +13,12 @@ from obstore.store import from_url
 import threading
 
 
-def download_files(urls: List[str], folders: List[str], totalfiles: int, destination: str, max_workers: int) -> str:
+def download_files(urls: List[str], folders: List[str], totalfiles: int, destination: str, max_workers: int) -> int:
     """
     Optimized download function using obstore for OneLake operations.
+
+    Returns:
+        int: 1 if files were successfully downloaded, 0 if error or no new files
 
     Fixes:
     - Always re-reads the log from OneLake (no stale cache issue)
@@ -26,6 +29,7 @@ def download_files(urls: List[str], folders: List[str], totalfiles: int, destina
     """
     store = from_url(destination)
     summary = []
+    total_files_processed = 0
     
     # Thread lock for log operations
     log_lock = threading.Lock()
@@ -73,7 +77,7 @@ def download_files(urls: List[str], folders: List[str], totalfiles: int, destina
         try:
             result = urlopen(url).read().decode("utf-8")
         except Exception as e:
-            return f"{url} - Connection failed: {e}"
+            return f"{url} - Connection failed: {e}", 0
 
         pattern = re.compile(r"[\w.-]+\.zip")
         all_files = sorted(dict.fromkeys(pattern.findall(result)), reverse=True)
@@ -83,7 +87,7 @@ def download_files(urls: List[str], folders: List[str], totalfiles: int, destina
         new_files = sorted(new_files, reverse=True)[:totalfiles]
 
         if not new_files:
-            return f"{url} - 0 files extracted (all {len(all_files)} files already downloaded)"
+            return f"{url} - 0 files extracted (all {len(all_files)} files already downloaded)", 0
 
         uploaded_log_entries = []
         batch_uploads = []
@@ -125,7 +129,7 @@ def download_files(urls: List[str], folders: List[str], totalfiles: int, destina
                         batch_uploads.append((gzf, data))
 
         if not batch_uploads:
-            return f"{url} - No files to upload"
+            return f"{url} - No files to upload", 0
 
         # Step 3: Parallelize uploads
         successful_uploads = []
@@ -173,7 +177,7 @@ def download_files(urls: List[str], folders: List[str], totalfiles: int, destina
                 except Exception as e:
                     print(f"Error updating log file {log_file_name}: {e}")
 
-        return f"{url} - {len(successful_uploads)} files extracted and uploaded"
+        return f"{url} - {len(successful_uploads)} files extracted and uploaded", len(successful_uploads)
 
     # Process URLs concurrently
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
@@ -183,10 +187,16 @@ def download_files(urls: List[str], folders: List[str], totalfiles: int, destina
         }
         for future in as_completed(future_to_url):
             try:
-                result = future.result()
+                result, files_count = future.result()
                 summary.append(result)
+                total_files_processed += files_count
             except Exception as e:
                 url = future_to_url[future]
                 summary.append(f"{url} - Error: {e}")
+                # Don't add to total_files_processed for errors
 
-    return "\n".join(summary)
+    # Print summary for debugging
+    print("\n".join(summary))
+    
+    # Return 1 if any files were processed, 0 otherwise
+    return 1 if total_files_processed > 0 else 0
