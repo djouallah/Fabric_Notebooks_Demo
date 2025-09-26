@@ -12,7 +12,7 @@ import obstore
 from obstore.store import from_url
 
 
-def download(urls: List[str], folders: List[str], totalfiles: int, destination: str, max_workers: int) -> str:
+def download_files(urls: List[str], folders: List[str], totalfiles: int, destination: str, max_workers: int) -> str:
     """
     Optimized download function using obstore for OneLake operations.
 
