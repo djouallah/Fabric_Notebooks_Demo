@@ -9,7 +9,7 @@ from obstore.store import from_url
 
 
 
-def download_excel(urls: list[str], folder: str, destination: str) -> str:
+def download_excel( folder: str, destination: str) -> str:
     """Download files from URLs and save to object storage using obstore"""
     store = from_url(destination)
     if not folder.endswith("/"):
@@ -40,7 +40,7 @@ def download_excel(urls: list[str], folder: str, destination: str) -> str:
             logging.error(f"Could not visit the landing page to establish a session: {e}")
             return "" # Exit if we can't establish the session
 
-        for url in urls:
+        for url in ["https://www.aemo.com.au/-/media/Files/Electricity/NEM/Participant_Information/NEM-Registration-and-Exemption-List.xls"]:
             filename = os.path.basename(urlparse(url).path)
             if not filename:
                 continue
