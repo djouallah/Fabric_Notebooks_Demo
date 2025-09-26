@@ -13,7 +13,7 @@ from obstore.store import from_url
 import threading
 
 
-def download_files(urls: List[str], folders: List[str], totalfiles: int, ws: str,lh: str max_workers: int) -> int:
+def download_files(urls: List[str], folders: List[str], totalfiles: int, ws: str,lh: str, max_workers: int) -> int:
     """
     Optimized download function using obstore for OneLake operations.
 
