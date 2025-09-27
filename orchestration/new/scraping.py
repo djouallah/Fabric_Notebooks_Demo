@@ -32,7 +32,7 @@ def github_tree_to_api_url(url: str) -> str:
     return f"https://api.github.com/repos/{user}/{repo}/contents/{path}?ref={branch}"
 
 
-def download_files(urls: List[str], folders: List[str], totalfiles: int, ws: str, lh: str, max_workers: int) -> int:
+def scraping(urls: List[str], folders: List[str], totalfiles: int, ws: str, lh: str, max_workers: int) -> int:
     """
     Optimized download function using obstore for OneLake operations.
 
