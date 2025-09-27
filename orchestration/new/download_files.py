@@ -19,13 +19,6 @@ def download_files(urls: List[str], folders: List[str], totalfiles: int, ws: str
 
     Returns:
         int: 1 if files were successfully downloaded, 0 if error or no new files
-
-    Fixes:
-    - Always re-reads the log from OneLake (no stale cache issue)
-    - Log appends instead of overwriting order
-    - Parallel downloads/uploads for speed
-    - totalfiles batching preserved
-    - Fixed log reading/writing consistency
     """
     store = from_url(f'abfss://{ws}@onelake.dfs.fabric.microsoft.com/{lh}.Lakehouse/Files')
     summary = []
