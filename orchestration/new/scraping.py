@@ -14,7 +14,7 @@ import threading
 
 
 def is_github_tree_url(url: str) -> bool:
-    """Check if URL is a GitHub tree (directory) URL."""
+    """Check if URL is a GitHub  (directory) URL."""
     return url.startswith("https://github.com/") and "/tree/" in url
 
 
