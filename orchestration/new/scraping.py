@@ -40,6 +40,8 @@ def scraping(urls: List[str], folders: List[str], totalfiles: int, ws: str, lh: 
       - Regular HTML directory listings (original behavior)
       - GitHub tree URLs (e.g., https://github.com/user/repo/tree/branch/path)
 
+    Files are downloaded in descending order by filename.
+
     Returns:
         int: 1 if files were successfully downloaded, 0 if error or no new files
     """
@@ -107,6 +109,7 @@ def scraping(urls: List[str], folders: List[str], totalfiles: int, ws: str, lh: 
                     if item.get("type") == "file" and item.get("name", "").endswith(".zip"):
                         zip_files_info.append((item["name"], item["download_url"]))
                 
+                # Sort in descending order
                 zip_files_info.sort(key=lambda x: x[0], reverse=True)
                 all_files = [name for name, _ in zip_files_info]
                 github_zip_url_map = dict(zip_files_info)
@@ -114,13 +117,13 @@ def scraping(urls: List[str], folders: List[str], totalfiles: int, ws: str, lh: 
                 # Original: parse HTML directory listing
                 html_content = urlopen(url).read().decode("utf-8")
                 pattern = re.compile(r"[\w.-]+\.zip")
+                # Sort in descending order
                 all_files = sorted(dict.fromkeys(pattern.findall(html_content)), reverse=True)
         except Exception as e:
             return f"{url} - Failed to list files: {e}", 0
 
-        # Filter out already downloaded files
-        new_files = [f for f in all_files if f not in downloaded_files]
-        new_files = sorted(new_files, reverse=True)[:totalfiles]
+        # Filter out already downloaded files and take top N (already in descending order)
+        new_files = [f for f in all_files if f not in downloaded_files][:totalfiles]
 
         if not new_files:
             return f"{url} - 0 files extracted (all {len(all_files)} files already downloaded)", 0
@@ -159,15 +162,23 @@ def scraping(urls: List[str], folders: List[str], totalfiles: int, ws: str, lh: 
                 print(f"Error processing {filename}: {e}")
                 return None
 
-        # Step 3: Parallelize file-level downloads
+        # Step 3: Process files in order (descending) to maintain sequence
+        # While we use parallel processing, we maintain the order in results
+        file_results = {}
         with ThreadPoolExecutor(max_workers=min(8, len(new_files))) as pool:
-            futures = [pool.submit(process_file, fn) for fn in new_files]
-            for f in as_completed(futures):
-                res = f.result()
+            # Submit in order with index to preserve sequence
+            futures = {pool.submit(process_file, fn): (idx, fn) for idx, fn in enumerate(new_files)}
+            for future in as_completed(futures):
+                idx, fn = futures[future]
+                res = future.result()
                 if res:
-                    for zipf, gzf, data in res:
-                        uploaded_log_entries.append((zipf, gzf))
-                        batch_uploads.append((gzf, data))
+                    file_results[idx] = res
+        
+        # Process results in descending order (by original index)
+        for idx in sorted(file_results.keys()):
+            for zipf, gzf, data in file_results[idx]:
+                uploaded_log_entries.append((zipf, gzf))
+                batch_uploads.append((gzf, data))
 
         if not batch_uploads:
             return f"{url} - No files to upload", 0
