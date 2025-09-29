@@ -1,5 +1,4 @@
-CREATE VIEW if not exists summary(cutoff) AS SELECT '1900-01-01';
-SET VARIABLE max_timestamp = (SELECT max(cutoff) from summary );
+CREATE VIEW if not exists summary(date) AS SELECT '1900-01-01';
 with incremental AS (
     SELECT
         s.date,
@@ -9,15 +8,13 @@ with incremental AS (
         max(p.RRP)  AS price
     FROM scada s
     JOIN duid d ON s.DUID = d.DUID
-    JOIN (SELECT * FROM price WHERE INTERVENTION = 0  and date  >= cast(getvariable('max_timestamp') as date)) p
+    JOIN (SELECT * FROM price WHERE INTERVENTION = 0  and date  NOT IN (SELECT DISTINCT date FROM summary)) p
         ON s.SETTLEMENTDATE = p.SETTLEMENTDATE AND d.Region = p.REGIONID
     WHERE
         s.INTERVENTION = 0
         AND INITIALMW <> 0
         AND p.INTERVENTION = 0
-        AND s.date           >= cast(getvariable('max_timestamp') as date)
-        AND s.settlementdate > getvariable('max_timestamp')
-        AND p.settlementdate > getvariable('max_timestamp')
+        AND s.date   NOT IN (SELECT DISTINCT date FROM summary)
     GROUP BY ALL
 ),
 final_with_cutoff AS (
