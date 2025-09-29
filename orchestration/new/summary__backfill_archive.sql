@@ -1,13 +1,11 @@
 CREATE VIEW IF NOT EXISTS summary(date) AS SELECT '1900-01-01';
 
 WITH date_bounds AS (
-    -- Get the earliest date in summary (excluding dummy date)
     SELECT MIN(date) AS min_date
     FROM summary
     WHERE date > '1900-01-01'
 ),
 available_dates AS (
-    -- Get all missing dates before min_date
     SELECT DISTINCT s.date
     FROM scada s
     CROSS JOIN date_bounds db
@@ -15,30 +13,22 @@ available_dates AS (
       AND s.INTERVENTION = 0
       AND s.INITIALMW <> 0
       AND s.date < db.min_date
-    ORDER BY s.date DESC
 ),
-contiguous_batch AS (
-    -- Find the longest contiguous sequence working backwards from min_date
+numbered_dates AS (
+    -- Number dates from min_date backwards
     SELECT 
         ad.date,
-        ROW_NUMBER() OVER (ORDER BY ad.date DESC) as rn,
-        ad.date + CAST(ROW_NUMBER() OVER (ORDER BY ad.date DESC) AS INTEGER) as date_plus_rn
+        (SELECT min_date FROM date_bounds) - ad.date AS days_before_min,
+        ROW_NUMBER() OVER (ORDER BY ad.date DESC) AS rn
     FROM available_dates ad
-    CROSS JOIN date_bounds db
-    WHERE ad.date <= db.min_date - 1
+    ORDER BY ad.date DESC
 ),
 contiguous_dates AS (
-    -- Group by the date_plus_rn to find contiguous sequences
-    -- The longest contiguous sequence will have the same date_plus_rn value
+    -- Only take dates where days_before_min equals row number
+    -- This ensures: min_date-1, min_date-2, min_date-3, etc (no gaps)
     SELECT date
-    FROM contiguous_batch
-    WHERE date_plus_rn = (
-        SELECT date_plus_rn
-        FROM contiguous_batch
-        GROUP BY date_plus_rn
-        ORDER BY COUNT(*) DESC, date_plus_rn DESC
-        LIMIT 1
-    )
+    FROM numbered_dates
+    WHERE days_before_min = rn
 ),
 incremental AS (
     SELECT
