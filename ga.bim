@@ -1,0 +1,1022 @@
+{
+  "compatibilityLevel": 1604,
+  "model": {
+    "annotations": [
+      {
+        "name": "PBI_QueryOrder",
+        "value": "[\"DirectLake - external\"]"
+      },
+      {
+        "name": "__PBI_TimeIntelligenceEnabled",
+        "value": "1"
+      },
+      {
+        "name": "PBI_ProTooling",
+        "value": "[\"DirectLakeOnOneLakeInWeb\",\"WebModelingEdit\"]"
+      }
+    ],
+    "culture": "en-US",
+    "dataAccessOptions": {
+      "legacyRedirects": true,
+      "returnErrorValuesAsNull": true
+    },
+    "defaultPowerBIDataSourceVersion": "powerBI_V3",
+    "expressions": [
+      {
+        "name": "DirectLake - external",
+        "annotations": [
+          {
+            "name": "PBI_IncludeFutureArtifacts",
+            "value": "False"
+          },
+          {
+            "name": "PBI_RemovedChildren",
+            "value": "[{\"remoteItemId\":{\"analysisServicesObject\":{\"sourceName\":null,\"sourceLineageTag\":\"[testing].[icebergga]\"}},\"objectType\":\"Table\"},{\"remoteItemId\":{\"analysisServicesObject\":{\"sourceName\":null,\"sourceLineageTag\":\"[testing].[simple]\"}},\"objectType\":\"Table\"}]"
+          }
+        ],
+        "expression": [
+          "let",
+          "    Source = AzureStorage.DataLake(\"https://onelake.dfs.fabric.microsoft.com/ec103875-d2e3-4dc1-b129-f4c8a89006cc/9d874716-9fe6-4613-98e4-ddff94a37991\", [HierarchicalNavigation=true])",
+          "in",
+          "    Source"
+        ],
+        "kind": "m",
+        "lineageTag": "5bfc810a-665d-4d50-826b-6d5c79d434cd"
+      }
+    ],
+    "relationships": [
+      {
+        "name": "6ff10a13-6316-fc20-5e62-384af34ffe4e",
+        "fromColumn": "date_key",
+        "fromTable": "fact_sessions",
+        "relyOnReferentialIntegrity": true,
+        "toColumn": "date_key",
+        "toTable": "dim_date"
+      },
+      {
+        "name": "7e76d8ee-0661-a2b0-82ae-93fbdd172db7",
+        "fromColumn": "device_key",
+        "fromTable": "fact_sessions",
+        "relyOnReferentialIntegrity": true,
+        "toColumn": "device_key",
+        "toTable": "dim_device"
+      },
+      {
+        "name": "a8e936f6-7a13-a56d-bc9b-6f740d15c2e5",
+        "fromColumn": "geo_key",
+        "fromTable": "fact_sessions",
+        "relyOnReferentialIntegrity": true,
+        "toColumn": "geo_key",
+        "toTable": "dim_geography"
+      },
+      {
+        "name": "a63833c7-f71c-ec1d-214e-b64094ddb0c6",
+        "fromColumn": "traffic_key",
+        "fromTable": "fact_sessions",
+        "relyOnReferentialIntegrity": true,
+        "toColumn": "traffic_key",
+        "toTable": "dim_traffic"
+      },
+      {
+        "name": "1ce45c14-eaf2-b3bc-b9de-8328dc6fcfd9",
+        "fromColumn": "visitor_key",
+        "fromTable": "fact_sessions",
+        "relyOnReferentialIntegrity": true,
+        "toColumn": "visitor_key",
+        "toTable": "dim_visitor"
+      }
+    ],
+    "sourceQueryCulture": "en-US",
+    "tables": [
+      {
+        "name": "dim_traffic",
+        "columns": [
+          {
+            "name": "traffic_key",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "ee9cc54b-544a-4561-b47b-eec6ce6bba21",
+            "sourceColumn": "traffic_key",
+            "sourceLineageTag": "traffic_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "source",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "fd272911-3c44-4e39-9333-0f876bb8f74b",
+            "sourceColumn": "source",
+            "sourceLineageTag": "source",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "medium",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "a6d84663-da90-400f-832f-21535f75fdf1",
+            "sourceColumn": "medium",
+            "sourceLineageTag": "medium",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "campaign",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "fe1a5001-f572-4e8f-ab49-0049157f18e0",
+            "sourceColumn": "campaign",
+            "sourceLineageTag": "campaign",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "keyword",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "d8e61744-3f73-4a19-bf94-000648014843",
+            "sourceColumn": "keyword",
+            "sourceLineageTag": "keyword",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "adContent",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "c2f961ab-ee96-477c-9091-60e5fd2d7d39",
+            "sourceColumn": "adContent",
+            "sourceLineageTag": "adContent",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "ad9ae933-6a64-4753-8cdd-669639ff2daa",
+        "partitions": [
+          {
+            "name": "dim_traffic",
+            "mode": "directLake",
+            "source": {
+              "entityName": "dim_traffic",
+              "expressionSource": "DirectLake - external",
+              "schemaName": "gold",
+              "type": "entity"
+            }
+          }
+        ],
+        "sourceLineageTag": "[gold].[dim_traffic]"
+      },
+      {
+        "name": "dim_geography",
+        "columns": [
+          {
+            "name": "geo_key",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "4ec1630b-deb1-412b-b9c8-24d08457777e",
+            "sourceColumn": "geo_key",
+            "sourceLineageTag": "geo_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "continent",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "c4a3d986-d24a-4523-9150-d2f6ddc793f5",
+            "sourceColumn": "continent",
+            "sourceLineageTag": "continent",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "country",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "ae060f94-f182-46ba-a3f9-7a5a7fcc186f",
+            "sourceColumn": "country",
+            "sourceLineageTag": "country",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "region",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "dae620f9-6808-439e-b46a-9b4f62fceb06",
+            "sourceColumn": "region",
+            "sourceLineageTag": "region",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "city",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "bad001fd-6031-4c92-af3f-e7bb85969fee",
+            "sourceColumn": "city",
+            "sourceLineageTag": "city",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "7e7dab8b-fb3a-4f2d-b976-6d28a359e3aa",
+        "partitions": [
+          {
+            "name": "dim_geography",
+            "mode": "directLake",
+            "source": {
+              "entityName": "dim_geography",
+              "expressionSource": "DirectLake - external",
+              "schemaName": "gold",
+              "type": "entity"
+            }
+          }
+        ],
+        "sourceLineageTag": "[gold].[dim_geography]"
+      },
+      {
+        "name": "dim_device",
+        "columns": [
+          {
+            "name": "device_key",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "b7062246-250d-48c7-aafa-95a085f5528d",
+            "sourceColumn": "device_key",
+            "sourceLineageTag": "device_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "deviceCategory",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "81c33332-a41a-46d1-ba26-a7f8e5efbfcd",
+            "sourceColumn": "deviceCategory",
+            "sourceLineageTag": "deviceCategory",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "operatingSystem",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "a0d501b8-0473-40e8-ad4e-a11ea436c6f4",
+            "sourceColumn": "operatingSystem",
+            "sourceLineageTag": "operatingSystem",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "browser",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "6de6ca10-64bf-497b-bf63-4e509df1e461",
+            "sourceColumn": "browser",
+            "sourceLineageTag": "browser",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "isMobile",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "boolean",
+            "formatString": "\"TRUE\";\"TRUE\";\"FALSE\"",
+            "lineageTag": "fa2c51cd-f74d-4b27-884f-2a74f3a55540",
+            "sourceColumn": "isMobile",
+            "sourceLineageTag": "isMobile",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "6fe6ea46-f761-4c85-b128-b37631891e28",
+        "partitions": [
+          {
+            "name": "dim_device",
+            "mode": "directLake",
+            "source": {
+              "entityName": "dim_device",
+              "expressionSource": "DirectLake - external",
+              "schemaName": "gold",
+              "type": "entity"
+            }
+          }
+        ],
+        "sourceLineageTag": "[gold].[dim_device]"
+      },
+      {
+        "name": "dim_visitor",
+        "columns": [
+          {
+            "name": "visitor_key",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "170be4a2-6033-4db9-8074-47eb16e57e00",
+            "sourceColumn": "visitor_key",
+            "sourceLineageTag": "visitor_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "fullVisitorId",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "c979a26c-8cd7-4072-82c1-d1d09bf1862c",
+            "sourceColumn": "fullVisitorId",
+            "sourceLineageTag": "fullVisitorId",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "68e762ee-6128-47e2-b95e-b5c3f8fb8b20",
+        "partitions": [
+          {
+            "name": "dim_visitor",
+            "mode": "directLake",
+            "source": {
+              "entityName": "dim_visitor",
+              "expressionSource": "DirectLake - external",
+              "schemaName": "gold",
+              "type": "entity"
+            }
+          }
+        ],
+        "sourceLineageTag": "[gold].[dim_visitor]"
+      },
+      {
+        "name": "fact_sessions",
+        "changedProperties": [
+          {
+            "property": "IsHidden"
+          }
+        ],
+        "columns": [
+          {
+            "name": "date_key",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "changedProperties": [
+              {
+                "property": "IsHidden"
+              }
+            ],
+            "dataType": "int64",
+            "formatString": "0",
+            "isHidden": true,
+            "lineageTag": "cbda9aa6-f6e2-4323-bc45-330d856402b2",
+            "sourceColumn": "date_key",
+            "sourceLineageTag": "date_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "visitor_key",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "changedProperties": [
+              {
+                "property": "IsHidden"
+              }
+            ],
+            "dataType": "string",
+            "isHidden": true,
+            "lineageTag": "bb9af5a7-0b2b-4125-ad25-4f3ac97ff7c3",
+            "sourceColumn": "visitor_key",
+            "sourceLineageTag": "visitor_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "traffic_key",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "changedProperties": [
+              {
+                "property": "IsHidden"
+              }
+            ],
+            "dataType": "string",
+            "isHidden": true,
+            "lineageTag": "7dec143c-8e02-4633-9833-0b61acb50f9f",
+            "sourceColumn": "traffic_key",
+            "sourceLineageTag": "traffic_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "device_key",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "changedProperties": [
+              {
+                "property": "IsHidden"
+              }
+            ],
+            "dataType": "string",
+            "isHidden": true,
+            "lineageTag": "d74323fe-c2b1-46df-91ba-89c9f4ccacd9",
+            "sourceColumn": "device_key",
+            "sourceLineageTag": "device_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "geo_key",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "changedProperties": [
+              {
+                "property": "IsHidden"
+              }
+            ],
+            "dataType": "string",
+            "isHidden": true,
+            "lineageTag": "1ab8132f-4d36-4065-b952-7677549f19a1",
+            "sourceColumn": "geo_key",
+            "sourceLineageTag": "geo_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "visits",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "changedProperties": [
+              {
+                "property": "IsHidden"
+              }
+            ],
+            "dataType": "int64",
+            "formatString": "0",
+            "isHidden": true,
+            "lineageTag": "7b71a315-2e29-4b04-bc46-de0dc0923252",
+            "sourceColumn": "visits",
+            "sourceLineageTag": "visits",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "hits",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "changedProperties": [
+              {
+                "property": "IsHidden"
+              }
+            ],
+            "dataType": "int64",
+            "formatString": "0",
+            "isHidden": true,
+            "lineageTag": "0838e5ca-f652-4186-b559-379ae32a8b3a",
+            "sourceColumn": "hits",
+            "sourceLineageTag": "hits",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "pageviews",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "changedProperties": [
+              {
+                "property": "IsHidden"
+              }
+            ],
+            "dataType": "int64",
+            "formatString": "0",
+            "isHidden": true,
+            "lineageTag": "934f02c1-2e49-4d15-892c-865ef48dc743",
+            "sourceColumn": "pageviews",
+            "sourceLineageTag": "pageviews",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "timeOnSite",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "changedProperties": [
+              {
+                "property": "IsHidden"
+              }
+            ],
+            "dataType": "int64",
+            "formatString": "0",
+            "isHidden": true,
+            "lineageTag": "56929cb0-f1cf-45f0-86eb-913a6b5a6f54",
+            "sourceColumn": "timeOnSite",
+            "sourceLineageTag": "timeOnSite",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "bounces",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "changedProperties": [
+              {
+                "property": "IsHidden"
+              }
+            ],
+            "dataType": "int64",
+            "formatString": "0",
+            "isHidden": true,
+            "lineageTag": "1ffd481f-39f9-4425-8263-5f356fc8d9b4",
+            "sourceColumn": "bounces",
+            "sourceLineageTag": "bounces",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "transactions",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "changedProperties": [
+              {
+                "property": "IsHidden"
+              }
+            ],
+            "dataType": "int64",
+            "formatString": "0",
+            "isHidden": true,
+            "lineageTag": "322ada39-881a-458d-b085-c34ac49132b6",
+            "sourceColumn": "transactions",
+            "sourceLineageTag": "transactions",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "revenue",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              },
+              {
+                "name": "PBI_FormatHint",
+                "value": "{\"isGeneralNumber\":true}"
+              }
+            ],
+            "changedProperties": [
+              {
+                "property": "IsHidden"
+              }
+            ],
+            "dataType": "double",
+            "isHidden": true,
+            "lineageTag": "dfad1888-8a90-4820-ba88-ab3e89d8b5c7",
+            "sourceColumn": "revenue",
+            "sourceLineageTag": "revenue",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "newVisits",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "changedProperties": [
+              {
+                "property": "IsHidden"
+              }
+            ],
+            "dataType": "int64",
+            "formatString": "0",
+            "isHidden": true,
+            "lineageTag": "a0a142fd-8edd-4c8e-9e94-ff8e4a2acf42",
+            "sourceColumn": "newVisits",
+            "sourceLineageTag": "newVisits",
+            "summarizeBy": "sum"
+          },
+          {
+            "name": "visitNumber",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "changedProperties": [
+              {
+                "property": "IsHidden"
+              }
+            ],
+            "dataType": "int64",
+            "formatString": "0",
+            "isHidden": true,
+            "lineageTag": "67a510c9-d463-4199-abd6-153319c3dbed",
+            "sourceColumn": "visitNumber",
+            "sourceLineageTag": "visitNumber",
+            "summarizeBy": "sum"
+          }
+        ],
+        "lineageTag": "7562c6d0-1498-40b1-a2cc-688466e4be16",
+        "measures": [
+          {
+            "name": "Total Sessions",
+            "changedProperties": [
+              {
+                "property": "Name"
+              },
+              {
+                "property": "IsHidden"
+              }
+            ],
+            "expression": "SUM([visits])",
+            "formatString": "0",
+            "lineageTag": "92a04d25-e810-4792-90fd-cd2a87fb4ee8"
+          },
+          {
+            "name": "Total Pageviews",
+            "changedProperties": [
+              {
+                "property": "Name"
+              }
+            ],
+            "expression": "SUM([pageviews])",
+            "formatString": "0",
+            "lineageTag": "c31dec3a-71b0-4cbc-be4e-5f616e90ca9b"
+          },
+          {
+            "name": "Total Revenue",
+            "annotations": [
+              {
+                "name": "PBI_FormatHint",
+                "value": "{\"isGeneralNumber\":true}"
+              }
+            ],
+            "changedProperties": [
+              {
+                "property": "Name"
+              }
+            ],
+            "expression": "SUM([revenue])",
+            "lineageTag": "536e575f-5177-4984-b239-185b2a10573d"
+          },
+          {
+            "name": "Bounce Rate",
+            "changedProperties": [
+              {
+                "property": "Name"
+              },
+              {
+                "property": "FormatString"
+              }
+            ],
+            "expression": "DIVIDE(SUM([bounces]), SUM([visits]))",
+            "formatString": "0.00%;-0.00%;0.00%",
+            "lineageTag": "0bd7005c-0d10-4c76-b0c3-fdac22a6cfe7"
+          },
+          {
+            "name": "Avg Time on Site",
+            "annotations": [
+              {
+                "name": "PBI_FormatHint",
+                "value": "{\"isGeneralNumber\":true}"
+              }
+            ],
+            "changedProperties": [
+              {
+                "property": "Name"
+              }
+            ],
+            "expression": "DIVIDE(SUM([timeOnSite]), SUM([visits]))",
+            "lineageTag": "b742931d-28ab-4fa2-a6ef-d99318c9542e"
+          },
+          {
+            "name": "Avg Pages per Session",
+            "changedProperties": [
+              {
+                "property": "Name"
+              },
+              {
+                "property": "FormatString"
+              }
+            ],
+            "expression": "DIVIDE(SUM([pageviews]), SUM([visits]))",
+            "formatString": "0.00%;-0.00%;0.00%",
+            "lineageTag": "c8f0067b-f65b-46cf-9b68-dba664d949ac"
+          },
+          {
+            "name": "Conversion Rate",
+            "changedProperties": [
+              {
+                "property": "Name"
+              },
+              {
+                "property": "FormatString"
+              }
+            ],
+            "expression": "DIVIDE(SUM([transactions]), SUM([visits]))",
+            "formatString": "0%;-0%;0%",
+            "lineageTag": "02ca6860-3fd2-4d39-b20e-bb7567a35fbd"
+          }
+        ],
+        "partitions": [
+          {
+            "name": "fact_sessions",
+            "mode": "directLake",
+            "source": {
+              "entityName": "fact_sessions",
+              "expressionSource": "DirectLake - external",
+              "schemaName": "gold",
+              "type": "entity"
+            }
+          }
+        ],
+        "sourceLineageTag": "[gold].[fact_sessions]"
+      },
+      {
+        "name": "dim_date",
+        "columns": [
+          {
+            "name": "date_key",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "formatString": "0",
+            "lineageTag": "56b6a960-93c9-4613-b268-21a4710a27ba",
+            "sourceColumn": "date_key",
+            "sourceLineageTag": "date_key",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "year",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "formatString": "0",
+            "lineageTag": "3aead770-41e7-4a4d-84f6-0dc2b7efd80b",
+            "sourceColumn": "year",
+            "sourceLineageTag": "year",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "month",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "formatString": "0",
+            "lineageTag": "67a68e93-ea5c-46ab-91da-c21c02d03ba0",
+            "sourceColumn": "month",
+            "sourceLineageTag": "month",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "day",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "formatString": "0",
+            "lineageTag": "7a355635-28d6-4af7-aef3-0b275c3a4309",
+            "sourceColumn": "day",
+            "sourceLineageTag": "day",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "day_of_week",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "formatString": "0",
+            "lineageTag": "30c34dba-b1b8-40d9-b847-7c60e93fc675",
+            "sourceColumn": "day_of_week",
+            "sourceLineageTag": "day_of_week",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "day_name",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "4d00b831-c91c-45bc-a5a5-7bf0f82d32e4",
+            "sourceColumn": "day_name",
+            "sourceLineageTag": "day_name",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "month_name",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "string",
+            "lineageTag": "3e8289c0-028e-44f2-8ea4-a17195d9d1e0",
+            "sourceColumn": "month_name",
+            "sourceLineageTag": "month_name",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "quarter",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "formatString": "0",
+            "lineageTag": "0cb0d8ee-5279-4711-999e-7b2aab951015",
+            "sourceColumn": "quarter",
+            "sourceLineageTag": "quarter",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "is_weekend",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "boolean",
+            "formatString": "\"TRUE\";\"TRUE\";\"FALSE\"",
+            "lineageTag": "d7a24856-38f7-4995-bbce-55f68509aee9",
+            "sourceColumn": "is_weekend",
+            "sourceLineageTag": "is_weekend",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "week_of_year",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "int64",
+            "formatString": "0",
+            "lineageTag": "3c209e45-dbfb-463c-ae55-d23e1d5cf9e9",
+            "sourceColumn": "week_of_year",
+            "sourceLineageTag": "week_of_year",
+            "summarizeBy": "none"
+          },
+          {
+            "name": "full_date",
+            "annotations": [
+              {
+                "name": "SummarizationSetBy",
+                "value": "Automatic"
+              }
+            ],
+            "dataType": "dateTime",
+            "formatString": "General Date",
+            "lineageTag": "b17d2976-581e-44fe-afe6-bf8c118178ad",
+            "sourceColumn": "full_date",
+            "sourceLineageTag": "full_date",
+            "summarizeBy": "none"
+          }
+        ],
+        "lineageTag": "d69e24dc-6aa9-469c-ab70-6619b912212d",
+        "partitions": [
+          {
+            "name": "dim_date",
+            "mode": "directLake",
+            "source": {
+              "entityName": "dim_date",
+              "expressionSource": "DirectLake - external",
+              "schemaName": "gold",
+              "type": "entity"
+            }
+          }
+        ],
+        "sourceLineageTag": "[gold].[dim_date]"
+      }
+    ]
+  }
+}
