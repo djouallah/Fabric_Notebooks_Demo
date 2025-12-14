@@ -21,7 +21,7 @@ DB_CONFIG = {
 
 
 s3 = 's3'
-storage_path = 's3://sydneydatamim/duck/'
+storage_path = 's3://myduck/duck/'
 
 # Test configuration
 NUM_WORKERS = [1,8]
@@ -636,3 +636,4 @@ if __name__ == '__main__':
     pivot_df = df.pivot(index='workers', columns='table_type', values='ops_per_second')
     print(pivot_df.to_string())
     print("="*100)
+
