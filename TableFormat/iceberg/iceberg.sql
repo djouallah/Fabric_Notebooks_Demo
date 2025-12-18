@@ -697,4 +697,12 @@ COMMIT;
 
 -- verify data load
 select	count(distinct file) from scada ;
-select * from summary limit 10 ;
+
+with summ_results as (
+  select week(date) as wk, sum(mw) as Mwh
+  from summary
+  group by all
+)
+select wk,
+     bar(sum(Mwh), min(sum(Mwh)) OVER (), max(sum(Mwh)) OVER ()) as Mwh
+                     from summ_results group by wk order by wk desc ;
