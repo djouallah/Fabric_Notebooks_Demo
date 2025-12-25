@@ -47,9 +47,13 @@ active_tables AS (
 latest_snapshots AS (
     SELECT 
         t.*,
-        (SELECT MAX(begin_snapshot) 
-         FROM ducklake_data_file 
-         WHERE table_id = t.table_id) AS latest_snapshot
+        (SELECT MAX(sc.snapshot_id)
+         FROM ducklake_snapshot_changes sc
+         WHERE sc.changes_made LIKE '%inserted_into_table:' || t.table_id || '%'
+            OR sc.changes_made LIKE '%deleted_from_table:' || t.table_id || '%'
+            OR sc.changes_made LIKE '%compacted_table:' || t.table_id || '%'
+            OR sc.changes_made LIKE '%altered_table:' || t.table_id || '%'
+        ) AS latest_snapshot
     FROM active_tables t
 ),
 export_status AS (
