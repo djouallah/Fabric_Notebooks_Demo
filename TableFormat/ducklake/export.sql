@@ -277,7 +277,16 @@ checkpoint_parquet_data AS (
         NULL AS metaData,
         NULL AS add,
         NULL AS remove,
-        NULL AS commitInfo,
+        NULL::STRUCT(
+            timestamp BIGINT,
+            operation VARCHAR,
+            operationParameters MAP(VARCHAR, VARCHAR),
+            isolationLevel VARCHAR,
+            isBlindAppend BOOLEAN,
+            operationMetrics MAP(VARCHAR, VARCHAR),
+            engineInfo VARCHAR,
+            txnId VARCHAR
+        ) AS commitInfo,
         1 AS row_order
     FROM checkpoint_data cd
     UNION ALL
@@ -316,7 +325,16 @@ checkpoint_parquet_data AS (
         ) AS metaData,
         NULL AS add,
         NULL AS remove,
-        NULL AS commitInfo,
+        NULL::STRUCT(
+            timestamp BIGINT,
+            operation VARCHAR,
+            operationParameters MAP(VARCHAR, VARCHAR),
+            isolationLevel VARCHAR,
+            isBlindAppend BOOLEAN,
+            operationMetrics MAP(VARCHAR, VARCHAR),
+            engineInfo VARCHAR,
+            txnId VARCHAR
+        ) AS commitInfo,
         2 AS row_order
     FROM checkpoint_data cd
     UNION ALL
@@ -337,7 +355,16 @@ checkpoint_parquet_data AS (
         NULL AS metaData,
         unnest(cd.add_entries) AS add,
         NULL AS remove,
-        NULL AS commitInfo,
+        NULL::STRUCT(
+            timestamp BIGINT,
+            operation VARCHAR,
+            operationParameters MAP(VARCHAR, VARCHAR),
+            isolationLevel VARCHAR,
+            isBlindAppend BOOLEAN,
+            operationMetrics MAP(VARCHAR, VARCHAR),
+            engineInfo VARCHAR,
+            txnId VARCHAR
+        ) AS commitInfo,
         3 AS row_order
     FROM checkpoint_data cd
 ),
