@@ -1,5 +1,15 @@
 
-ATTACH or replace 'ducklake:new.db' AS dwh  (DATA_PATH 'abfss://icebergmainstorage.dfs.core.windows.net/data/demo') ;
+----------------- Setup Azure Secret and Attach DuckLake Data Warehouse --------------------------------------
+-------------- fabric notebook provide a token automatically, for your laptop CLI is the easiest -------------
+
+CREATE or replace   SECRET secret_azure (
+    TYPE azure,
+    PROVIDER credential_chain,
+    CHAIN 'cli',
+    ACCOUNT_NAME 'onelake'
+);
+
+ATTACH or replace 'ducklake:cat.db' AS dwh  (DATA_PATH 'abfss://ducklake@onelake.dfs.fabric.microsoft.com/data.Lakehouse/Tables') ;
   USE dwh ;
   CALL set_option('parquet_row_group_size', 2048*1000) ;
   CALL set_option('target_file_size', '128MB') ;
@@ -14,6 +24,7 @@ use dwh.bronze;
 
 LOAD zipfs;
 SET  force_download = true;
+
  
 create table  if not exists calendar as
 SELECT cast(unnest(generate_series(cast ('2018-04-01' as date), cast('2026-12-31' as date), interval 1 day)) as date) as date,
@@ -608,7 +619,7 @@ create or replace temp view price_staging as
       AND VERSION = '3'
   ;
 
-
+create table if not exists duid as select * from duid_staging limit 0 ;
 create or replace temp view  summary_staging as
 select
   s.DATE as date,
@@ -638,11 +649,6 @@ ORDER BY
   time,
   price;
 
-
-create table if not exists duid as select * from duid_staging limit 0 ;
-
--------------- core load process --------------------------------
--- load data from staging to iceberg tables
 INSERT INTO
   scada BY NAME
 SELECT
@@ -670,14 +676,11 @@ FROM
   price_staging ;
 
   
----------------------------------------------------------------
 BEGIN TRANSACTION;
-truncate duid ;
-insert into duid select * from duid_staging ;
-truncate summary ;
-insert into  summary BY NAME  select * from summary_staging ;
+truncate duid    ;insert into duid select * from duid_staging ;
+truncate summary ;insert into  summary BY NAME  select * from summary_staging ;
 COMMIT;
-
+------------------------------------------------------------
 
 -- verify data load
 select	count(distinct file) from scada ;

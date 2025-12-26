@@ -1,5 +1,12 @@
 
-ATTACH or replace 'new.db' AS dwh_export ; 
+CREATE or replace  SECRET secret_azure (
+    TYPE azure,
+    PROVIDER credential_chain,
+    CHAIN 'cli',
+    ACCOUNT_NAME 'onelake'
+);
+
+ATTACH or replace 'cat.db' AS dwh_export ; 
 USE dwh_export ;
 
 -- Create export tracking table if it doesn't exist
@@ -475,8 +482,8 @@ CREATE OR REPLACE TEMP TABLE fifth_export AS
 SELECT table_id, table_root, snapshot_id FROM numbered_exports WHERE export_order = 5;
 
 -- Process first export
-
 -- Set file paths as variables
+begin transaction ;
 SET VARIABLE checkpoint_file = (
     SELECT table_root || '/_delta_log/' || lpad(snapshot_id::VARCHAR, 20, '0') || '.checkpoint.parquet' 
     FROM first_export
@@ -530,8 +537,10 @@ FROM temp_checkpoint_parquet p
 WHERE p.table_id = (SELECT table_id FROM first_export)
   AND p.snapshot_id = (SELECT snapshot_id FROM first_export)
 LIMIT 1;
-
+commit ;
 -- Process second export (if exists)
+
+begin transaction ;
 
 SET VARIABLE checkpoint_file = (
     SELECT table_root || '/_delta_log/' || lpad(snapshot_id::VARCHAR, 20, '0') || '.checkpoint.parquet' 
@@ -581,8 +590,8 @@ FROM temp_checkpoint_parquet p
 WHERE p.table_id = (SELECT table_id FROM second_export)
   AND p.snapshot_id = (SELECT snapshot_id FROM second_export)
 LIMIT 1;
-
--- Process third export (if exists)
+commit ;
+begin transaction ;
 
 SET VARIABLE checkpoint_file = (
     SELECT table_root || '/_delta_log/' || lpad(snapshot_id::VARCHAR, 20, '0') || '.checkpoint.parquet' 
@@ -632,9 +641,9 @@ FROM temp_checkpoint_parquet p
 WHERE p.table_id = (SELECT table_id FROM third_export)
   AND p.snapshot_id = (SELECT snapshot_id FROM third_export)
 LIMIT 1;
-
+commit ;
 -- Process fourth export (if exists)
-
+begin transaction ;
 SET VARIABLE checkpoint_file = (
     SELECT table_root || '/_delta_log/' || lpad(snapshot_id::VARCHAR, 20, '0') || '.checkpoint.parquet' 
     FROM fourth_export
@@ -683,9 +692,9 @@ FROM temp_checkpoint_parquet p
 WHERE p.table_id = (SELECT table_id FROM fourth_export)
   AND p.snapshot_id = (SELECT snapshot_id FROM fourth_export)
 LIMIT 1;
-
+commit ;
 -- Process fifth export (if exists)
-
+begin transaction ;
 SET VARIABLE checkpoint_file = (
     SELECT table_root || '/_delta_log/' || lpad(snapshot_id::VARCHAR, 20, '0') || '.checkpoint.parquet' 
     FROM fifth_export
@@ -734,3 +743,4 @@ FROM temp_checkpoint_parquet p
 WHERE p.table_id = (SELECT table_id FROM fifth_export)
   AND p.snapshot_id = (SELECT snapshot_id FROM fifth_export)
 LIMIT 1;
+commit ;
