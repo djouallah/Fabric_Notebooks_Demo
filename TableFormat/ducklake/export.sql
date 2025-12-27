@@ -6,14 +6,14 @@ CREATE or replace  SECRET secret_azure (
     ACCOUNT_NAME 'onelake'
 );
 
-ATTACH or replace 'cat.db' AS dwh_export ; 
+ATTACH or replace 'sqlite:bronze.db' AS dwh_export ; 
 USE dwh_export ;
 
 -- Create export tracking table if it doesn't exist
 CREATE TABLE IF NOT EXISTS ducklake_export_log (
     table_id BIGINT,
     snapshot_id BIGINT,
-    export_timestamp TIMESTAMP DEFAULT now(),
+    export_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (table_id, snapshot_id)
 );
 

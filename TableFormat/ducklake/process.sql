@@ -9,7 +9,7 @@ CREATE or replace   SECRET secret_azure (
     ACCOUNT_NAME 'onelake'
 );
 
-ATTACH or replace 'ducklake:cat.db' AS dwh  (DATA_PATH 'abfss://ducklake@onelake.dfs.fabric.microsoft.com/data.Lakehouse/Tables') ;
+ATTACH or replace 'ducklake:sqlite:bronze.db' AS dwh  (DATA_PATH 'abfss://ducklake@onelake.dfs.fabric.microsoft.com/data.Lakehouse/Tables') ;
   USE dwh ;
   CALL set_option('parquet_row_group_size', 2048*1000) ;
   CALL set_option('target_file_size', '128MB') ;
@@ -675,7 +675,6 @@ SELECT
 FROM
   price_staging ;
 
-  
 BEGIN TRANSACTION;
 truncate duid    ;insert into duid select * from duid_staging ;
 truncate summary ;insert into  summary BY NAME  select * from summary_staging ;
