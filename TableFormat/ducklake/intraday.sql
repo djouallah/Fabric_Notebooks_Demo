@@ -2,15 +2,7 @@
 ----------------- Setup Azure Secret and Attach DuckLake Data Warehouse --------------------------------------
 -------------- fabric notebook provide a token automatically, for your laptop CLI is the easiest -------------
 
-CREATE or replace   SECRET secret_azure (
-    TYPE azure,
-    PROVIDER credential_chain,
-    CHAIN 'cli',
-    ACCOUNT_NAME 'onelake'
-);
 
-ATTACH or replace 'ducklake:sqlite:bronze.db' AS dwh ;
-use dwh.bronze;
 
 -------------------------------------------------------------
 LOAD zipfs;
@@ -364,11 +356,3 @@ FROM final_with_cutoff
 ORDER BY date, DUID, time;
 
 insert into summary BY NAME select * from summary_today_staging ;
-select max(cutoff) from summary ;
-
------------------------------------------------------------------
-
-use memory ;
-detach dwh ;
-
-------------------------------------------------------------------

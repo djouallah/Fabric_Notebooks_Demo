@@ -1,15 +1,9 @@
 
-CREATE or replace  SECRET secret_azure (
-    TYPE azure,
-    PROVIDER credential_chain,
-    CHAIN 'cli',
-    ACCOUNT_NAME 'onelake'
-);
 
-ATTACH or replace 'sqlite:bronze.db' AS dwh_export ; 
+use  __ducklake_metadata_dwh  ; 
 
 -- Create export tracking table if it doesn't exist
-CREATE TABLE IF NOT EXISTS dwh_export.ducklake_export_log (
+CREATE TABLE IF NOT EXISTS ducklake_export_log (
     table_id BIGINT,
     snapshot_id BIGINT,
     export_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -31,7 +25,7 @@ CREATE OR REPLACE TEMP TABLE export_summary (
 INSERT INTO export_summary
 WITH 
 data_root_config AS (
-    SELECT value AS data_root FROM dwh_export.ducklake_metadata WHERE key = 'data_path'
+    SELECT value AS data_root FROM ducklake_metadata WHERE key = 'data_path'
 ),
 active_tables AS (
     SELECT 
@@ -46,15 +40,15 @@ active_tables AS (
                 ELSE '' 
             END || 
             trim(t.path, '/') AS table_root
-    FROM dwh_export.ducklake_table t
-    JOIN dwh_export.ducklake_schema s USING(schema_id)
+    FROM ducklake_table t
+    JOIN ducklake_schema s USING(schema_id)
     WHERE t.end_snapshot IS NULL
 ),
 latest_snapshots AS (
     SELECT 
         t.*,
         (SELECT MAX(sc.snapshot_id)
-         FROM dwh_export.ducklake_snapshot_changes sc
+         FROM ducklake_snapshot_changes sc
          WHERE sc.changes_made LIKE '%inserted_into_table:' || t.table_id || '%'
             OR sc.changes_made LIKE '%deleted_from_table:' || t.table_id || '%'
             OR sc.changes_made LIKE '%compacted_table:' || t.table_id || '%'
@@ -66,13 +60,13 @@ export_status AS (
     SELECT 
         ls.*,
         el.snapshot_id AS exported_snapshot,
-        (SELECT COUNT(*) FROM dwh_export.ducklake_data_file df 
+        (SELECT COUNT(*) FROM ducklake_data_file df 
          WHERE df.table_id = ls.table_id 
            AND df.begin_snapshot <= ls.latest_snapshot
            AND (df.end_snapshot IS NULL OR df.end_snapshot > ls.latest_snapshot)
         ) AS file_count
     FROM latest_snapshots ls
-    LEFT JOIN dwh_export.ducklake_export_log el 
+    LEFT JOIN ducklake_export_log el 
         ON ls.table_id = el.table_id 
         AND ls.latest_snapshot = el.snapshot_id
 )
@@ -105,7 +99,7 @@ tables_to_export AS (
     FROM export_summary es
     WHERE es.status = 'needs_export'
       AND EXISTS (
-          SELECT 1 FROM dwh_export.ducklake_data_file df 
+          SELECT 1 FROM ducklake_data_file df 
           WHERE df.table_id = es.table_id 
             AND df.begin_snapshot <= es.snapshot_id
             AND (df.end_snapshot IS NULL OR df.end_snapshot > es.snapshot_id)
@@ -136,8 +130,8 @@ table_schemas AS (
             'metadata': MAP{}::MAP(VARCHAR, VARCHAR)
         }::STRUCT(name VARCHAR, type VARCHAR, nullable BOOLEAN, metadata MAP(VARCHAR, VARCHAR)) ORDER BY c.column_order) AS schema_fields
     FROM tables_to_export te
-    JOIN dwh_export.ducklake_table t ON te.table_id = t.table_id
-    JOIN dwh_export.ducklake_column c ON t.table_id = c.table_id
+    JOIN ducklake_table t ON te.table_id = t.table_id
+    JOIN ducklake_column c ON t.table_id = c.table_id
     WHERE c.begin_snapshot <= te.snapshot_id
       AND (c.end_snapshot IS NULL OR c.end_snapshot > te.snapshot_id)
     GROUP BY te.table_id, te.schema_name, te.table_name, te.snapshot_id, te.table_root
@@ -153,9 +147,9 @@ file_column_stats_agg AS (
         MAX(fcs.max_value) AS max_value,
         MAX(fcs.null_count) AS null_count
     FROM table_schemas ts
-    JOIN dwh_export.ducklake_data_file df ON ts.table_id = df.table_id
-    LEFT JOIN dwh_export.ducklake_file_column_stats fcs ON df.data_file_id = fcs.data_file_id
-    LEFT JOIN dwh_export.ducklake_column c ON fcs.column_id = c.column_id
+    JOIN ducklake_data_file df ON ts.table_id = df.table_id
+    LEFT JOIN ducklake_file_column_stats fcs ON df.data_file_id = fcs.data_file_id
+    LEFT JOIN ducklake_column c ON fcs.column_id = c.column_id
     WHERE df.begin_snapshot <= ts.snapshot_id
       AND (df.end_snapshot IS NULL OR df.end_snapshot > ts.snapshot_id)
       AND c.column_id IS NOT NULL
@@ -237,7 +231,7 @@ file_metadata AS (
             'value': fct.null_count
         } ORDER BY fct.column_name) FILTER (WHERE fct.column_name IS NOT NULL AND fct.null_count IS NOT NULL)), MAP{}::MAP(VARCHAR, BIGINT)) AS null_count
     FROM table_schemas ts
-    JOIN dwh_export.ducklake_data_file df ON ts.table_id = df.table_id
+    JOIN ducklake_data_file df ON ts.table_id = df.table_id
     LEFT JOIN file_column_stats_transformed fct ON df.data_file_id = fct.data_file_id
     WHERE df.begin_snapshot <= ts.snapshot_id
       AND (df.end_snapshot IS NULL OR df.end_snapshot > ts.snapshot_id)
@@ -516,7 +510,7 @@ SET VARIABLE last_checkpoint_file = COALESCE((SELECT table_root || '/_delta_log/
 COPY (SELECT protocol, metaData, add, remove, commitInfo FROM temp_checkpoint_parquet WHERE getvariable('has_rows') > 0 AND table_id = (SELECT table_id FROM first_export) AND snapshot_id = (SELECT snapshot_id FROM first_export) ORDER BY row_order) TO (getvariable('checkpoint_file')) (FORMAT PARQUET);
 COPY (SELECT content FROM temp_checkpoint_json WHERE getvariable('has_rows') > 0 AND table_id = (SELECT table_id FROM first_export) AND snapshot_id = (SELECT snapshot_id FROM first_export)) TO (getvariable('json_file')) (FORMAT CSV, HEADER false, QUOTE '');
 COPY (SELECT content FROM temp_last_checkpoint WHERE getvariable('has_rows') > 0 AND table_id = (SELECT table_id FROM first_export) AND snapshot_id = (SELECT snapshot_id FROM first_export)) TO (getvariable('last_checkpoint_file')) (FORMAT CSV, HEADER false, QUOTE '');
-INSERT INTO dwh_export.ducklake_export_log (table_id, snapshot_id) SELECT table_id, snapshot_id FROM first_export WHERE getvariable('has_rows') > 0;
+INSERT INTO ducklake_export_log (table_id, snapshot_id) SELECT table_id, snapshot_id FROM first_export WHERE getvariable('has_rows') > 0;
 commit ;
 -- Process second export (if exists)
 begin transaction ;
@@ -528,7 +522,7 @@ SET VARIABLE last_checkpoint_file = COALESCE((SELECT table_root || '/_delta_log/
 COPY (SELECT protocol, metaData, add, remove, commitInfo FROM temp_checkpoint_parquet WHERE getvariable('has_rows') > 0 AND table_id = (SELECT table_id FROM second_export) AND snapshot_id = (SELECT snapshot_id FROM second_export) ORDER BY row_order) TO (getvariable('checkpoint_file')) (FORMAT PARQUET);
 COPY (SELECT content FROM temp_checkpoint_json WHERE getvariable('has_rows') > 0 AND table_id = (SELECT table_id FROM second_export) AND snapshot_id = (SELECT snapshot_id FROM second_export)) TO (getvariable('json_file')) (FORMAT CSV, HEADER false, QUOTE '');
 COPY (SELECT content FROM temp_last_checkpoint WHERE getvariable('has_rows') > 0 AND table_id = (SELECT table_id FROM second_export) AND snapshot_id = (SELECT snapshot_id FROM second_export)) TO (getvariable('last_checkpoint_file')) (FORMAT CSV, HEADER false, QUOTE '');
-INSERT INTO dwh_export.ducklake_export_log (table_id, snapshot_id) SELECT table_id, snapshot_id FROM second_export WHERE getvariable('has_rows') > 0;
+INSERT INTO ducklake_export_log (table_id, snapshot_id) SELECT table_id, snapshot_id FROM second_export WHERE getvariable('has_rows') > 0;
 commit ;
 begin transaction ;
 SET VARIABLE has_rows = (SELECT COUNT(*) FROM third_export);
@@ -538,7 +532,7 @@ SET VARIABLE last_checkpoint_file = COALESCE((SELECT table_root || '/_delta_log/
 COPY (SELECT protocol, metaData, add, remove, commitInfo FROM temp_checkpoint_parquet WHERE getvariable('has_rows') > 0 AND table_id = (SELECT table_id FROM third_export) AND snapshot_id = (SELECT snapshot_id FROM third_export) ORDER BY row_order) TO (getvariable('checkpoint_file')) (FORMAT PARQUET);
 COPY (SELECT content FROM temp_checkpoint_json WHERE getvariable('has_rows') > 0 AND table_id = (SELECT table_id FROM third_export) AND snapshot_id = (SELECT snapshot_id FROM third_export)) TO (getvariable('json_file')) (FORMAT CSV, HEADER false, QUOTE '');
 COPY (SELECT content FROM temp_last_checkpoint WHERE getvariable('has_rows') > 0 AND table_id = (SELECT table_id FROM third_export) AND snapshot_id = (SELECT snapshot_id FROM third_export)) TO (getvariable('last_checkpoint_file')) (FORMAT CSV, HEADER false, QUOTE '');
-INSERT INTO dwh_export.ducklake_export_log (table_id, snapshot_id) SELECT table_id, snapshot_id FROM third_export WHERE getvariable('has_rows') > 0;
+INSERT INTO ducklake_export_log (table_id, snapshot_id) SELECT table_id, snapshot_id FROM third_export WHERE getvariable('has_rows') > 0;
 commit ;
 -- Process fourth export (if exists)
 begin transaction ;
@@ -549,7 +543,7 @@ SET VARIABLE last_checkpoint_file = COALESCE((SELECT table_root || '/_delta_log/
 COPY (SELECT protocol, metaData, add, remove, commitInfo FROM temp_checkpoint_parquet WHERE getvariable('has_rows') > 0 AND table_id = (SELECT table_id FROM fourth_export) AND snapshot_id = (SELECT snapshot_id FROM fourth_export) ORDER BY row_order) TO (getvariable('checkpoint_file')) (FORMAT PARQUET);
 COPY (SELECT content FROM temp_checkpoint_json WHERE getvariable('has_rows') > 0 AND table_id = (SELECT table_id FROM fourth_export) AND snapshot_id = (SELECT snapshot_id FROM fourth_export)) TO (getvariable('json_file')) (FORMAT CSV, HEADER false, QUOTE '');
 COPY (SELECT content FROM temp_last_checkpoint WHERE getvariable('has_rows') > 0 AND table_id = (SELECT table_id FROM fourth_export) AND snapshot_id = (SELECT snapshot_id FROM fourth_export)) TO (getvariable('last_checkpoint_file')) (FORMAT CSV, HEADER false, QUOTE '');
-INSERT INTO dwh_export.ducklake_export_log (table_id, snapshot_id) SELECT table_id, snapshot_id FROM fourth_export WHERE getvariable('has_rows') > 0;
+INSERT INTO ducklake_export_log (table_id, snapshot_id) SELECT table_id, snapshot_id FROM fourth_export WHERE getvariable('has_rows') > 0;
 commit ;
 -- Process fifth export (if exists)
 begin transaction ;
@@ -560,7 +554,7 @@ SET VARIABLE last_checkpoint_file = COALESCE((SELECT table_root || '/_delta_log/
 COPY (SELECT protocol, metaData, add, remove, commitInfo FROM temp_checkpoint_parquet WHERE getvariable('has_rows') > 0 AND table_id = (SELECT table_id FROM fifth_export) AND snapshot_id = (SELECT snapshot_id FROM fifth_export) ORDER BY row_order) TO (getvariable('checkpoint_file')) (FORMAT PARQUET);
 COPY (SELECT content FROM temp_checkpoint_json WHERE getvariable('has_rows') > 0 AND table_id = (SELECT table_id FROM fifth_export) AND snapshot_id = (SELECT snapshot_id FROM fifth_export)) TO (getvariable('json_file')) (FORMAT CSV, HEADER false, QUOTE '');
 COPY (SELECT content FROM temp_last_checkpoint WHERE getvariable('has_rows') > 0 AND table_id = (SELECT table_id FROM fifth_export) AND snapshot_id = (SELECT snapshot_id FROM fifth_export)) TO (getvariable('last_checkpoint_file')) (FORMAT CSV, HEADER false, QUOTE '');
-INSERT INTO dwh_export.ducklake_export_log (table_id, snapshot_id) SELECT table_id, snapshot_id FROM fifth_export WHERE getvariable('has_rows') > 0;
+INSERT INTO ducklake_export_log (table_id, snapshot_id) SELECT table_id, snapshot_id FROM fifth_export WHERE getvariable('has_rows') > 0;
 commit ;
 -- Process sixth export (if exists)
 begin transaction ;
@@ -571,7 +565,7 @@ SET VARIABLE last_checkpoint_file = COALESCE((SELECT table_root || '/_delta_log/
 COPY (SELECT protocol, metaData, add, remove, commitInfo FROM temp_checkpoint_parquet WHERE getvariable('has_rows') > 0 AND table_id = (SELECT table_id FROM sixth_export) AND snapshot_id = (SELECT snapshot_id FROM sixth_export) ORDER BY row_order) TO (getvariable('checkpoint_file')) (FORMAT PARQUET);
 COPY (SELECT content FROM temp_checkpoint_json WHERE getvariable('has_rows') > 0 AND table_id = (SELECT table_id FROM sixth_export) AND snapshot_id = (SELECT snapshot_id FROM sixth_export)) TO (getvariable('json_file')) (FORMAT CSV, HEADER false, QUOTE '');
 COPY (SELECT content FROM temp_last_checkpoint WHERE getvariable('has_rows') > 0 AND table_id = (SELECT table_id FROM sixth_export) AND snapshot_id = (SELECT snapshot_id FROM sixth_export)) TO (getvariable('last_checkpoint_file')) (FORMAT CSV, HEADER false, QUOTE '');
-INSERT INTO dwh_export.ducklake_export_log (table_id, snapshot_id) SELECT table_id, snapshot_id FROM sixth_export WHERE getvariable('has_rows') > 0;
+INSERT INTO ducklake_export_log (table_id, snapshot_id) SELECT table_id, snapshot_id FROM sixth_export WHERE getvariable('has_rows') > 0;
 commit ;
 -- Process seventh export (if exists)
 begin transaction ;
@@ -582,14 +576,14 @@ SET VARIABLE last_checkpoint_file = COALESCE((SELECT table_root || '/_delta_log/
 COPY (SELECT protocol, metaData, add, remove, commitInfo FROM temp_checkpoint_parquet WHERE getvariable('has_rows') > 0 AND table_id = (SELECT table_id FROM seventh_export) AND snapshot_id = (SELECT snapshot_id FROM seventh_export) ORDER BY row_order) TO (getvariable('checkpoint_file')) (FORMAT PARQUET);
 COPY (SELECT content FROM temp_checkpoint_json WHERE getvariable('has_rows') > 0 AND table_id = (SELECT table_id FROM seventh_export) AND snapshot_id = (SELECT snapshot_id FROM seventh_export)) TO (getvariable('json_file')) (FORMAT CSV, HEADER false, QUOTE '');
 COPY (SELECT content FROM temp_last_checkpoint WHERE getvariable('has_rows') > 0 AND table_id = (SELECT table_id FROM seventh_export) AND snapshot_id = (SELECT snapshot_id FROM seventh_export)) TO (getvariable('last_checkpoint_file')) (FORMAT CSV, HEADER false, QUOTE '');
-INSERT INTO dwh_export.ducklake_export_log (table_id, snapshot_id) SELECT table_id, snapshot_id FROM seventh_export WHERE getvariable('has_rows') > 0;
+INSERT INTO ducklake_export_log (table_id, snapshot_id) SELECT table_id, snapshot_id FROM seventh_export WHERE getvariable('has_rows') > 0;
 commit ;
 
 -- Show overall export status
 SELECT 
     status,
     COUNT(*) AS table_count,
-    list(table_name) AS tables
+    list(schema_name || '.' || table_name) AS tables
 FROM export_summary
 GROUP BY status
 ORDER BY 
@@ -598,7 +592,4 @@ ORDER BY
         WHEN 'already_exported' THEN 2 
         WHEN 'no_data_files' THEN 3
         WHEN 'no_snapshots' THEN 4 
-    END;
-
-
-select max(cutoff) from delta_scan('abfss://ducklake@onelake.dfs.fabric.microsoft.com/data.Lakehouse/Tables/bronze/summary') ;
+    END; 

@@ -2,30 +2,10 @@
 ----------------- Setup Azure Secret and Attach DuckLake Data Warehouse --------------------------------------
 -------------- fabric notebook provide a token automatically, for your laptop CLI is the easiest -------------
 
-CREATE or replace   SECRET secret_azure (
-    TYPE azure,
-    PROVIDER credential_chain,
-    CHAIN 'cli',
-    ACCOUNT_NAME 'onelake'
-);
+
 
 SET VARIABLE row_limit = 60;
-SET VARIABLE DATA_PATH = 'abfss://ducklake@onelake.dfs.fabric.microsoft.com/data.Lakehouse/Tables';
-
-----------------------------------------------------------------------------------------------------------------
-
 SELECT '[CONFIG] Processing ' || getvariable('row_limit') || ' files per batch' AS Status;
-
-ATTACH or replace 'ducklake:sqlite:bronze.db' AS dwh (DATA_PATH getvariable('DATA_PATH')) ;
-  USE dwh ;
-  CALL set_option('parquet_row_group_size', 2048*1000) ;
-  CALL set_option('target_file_size', '128MB') ;
-  CALL set_option('parquet_compression', 'ZSTD');
-  CALL set_option('parquet_version', 1);
-  CALL set_option('rewrite_delete_threshold', 0);
-
-create schema  if not exists dwh.bronze;
-use dwh.bronze;
 
 
 -------------------------------------------------------------
@@ -291,7 +271,7 @@ SELECT '[FILES] Found ' || count(*) || ' available files from NEMWEB' AS Status 
 
 SET VARIABLE list_of_files_scada = (
   SELECT
-    list(full_url)
+    COALESCE(list(full_url), [])
   FROM (
     SELECT full_url
     FROM list_files_web
@@ -308,7 +288,7 @@ SELECT unnest(getvariable('list_of_files_scada')) AS scada_files;
 
 SET VARIABLE list_of_files_price = (
   SELECT
-    list(full_url)
+    COALESCE(list(full_url), [])
   FROM (
     SELECT full_url
     FROM list_files_web
@@ -319,6 +299,10 @@ SET VARIABLE list_of_files_price = (
     LIMIT getvariable('row_limit')
   )
 );
+
+-- Set flags for conditional processing
+SET VARIABLE has_new_scada = (SELECT len(getvariable('list_of_files_scada')) > 0);
+SET VARIABLE has_new_price = (SELECT len(getvariable('list_of_files_price')) > 0);
 
 SELECT '[PRICE] Processing ' || len(getvariable('list_of_files_price')) || ' files' AS Status;
 SELECT unnest(getvariable('list_of_files_price')) AS price_files;
@@ -555,9 +539,12 @@ create or replace temp view price_staging as
       AND VERSION = '3'
   ;
 
-SELECT '[DUID] Start processing - fetching from 4 web sources (this may take time)...' AS Status;
+SELECT CASE WHEN getvariable('has_new_scada') 
+  THEN '[DUID] Start processing - fetching from 4 web sources (this may take time)...' 
+  ELSE '[DUID] Skipped - no new SCADA files to process' 
+END AS Status;
 
-create or replace temp table duid_staging as
+create or replace temp view duid_staging as
 WITH
   duid_aemo AS MATERIALIZED (
     SELECT
@@ -657,8 +644,6 @@ FROM
   duid_all a
   JOIN states ON a.Region = states.RegionID
   left JOIN geo ON a.duid = geo.duid;
-
-SELECT '[DUID] Loaded ' || count(*) || ' facilities from web sources' AS Status FROM duid_staging;
   
 create or replace temp view  summary_staging as
 select
@@ -702,7 +687,7 @@ SELECT
 FROM
   scada_staging ;
 
-SELECT '[INSERT] Inserted ' || count(*) || ' SCADA records' AS Status FROM scada WHERE date >= current_date - interval '7 days';
+
 
 INSERT INTO
   price BY NAME
@@ -717,25 +702,23 @@ SELECT
 FROM
   price_staging ;
 
-SELECT '[INSERT] Inserted ' || count(*) || ' PRICE records' AS Status FROM price WHERE date >= current_date - interval '7 days';
 
-SELECT '[REFRESH] Refreshing dimension tables...' AS Status;
 
-BEGIN TRANSACTION;
-truncate duid     ;insert into duid select * from duid_staging ;
-truncate summary  ;insert into summary BY NAME select * from summary_staging ;
-COMMIT;
+-- Only refresh dimension tables if we have new scada data
+SELECT '[REFRESH] Refreshing dimension tables...' AS Status WHERE getvariable('has_new_scada');
+SELECT '[REFRESH] Skipped - no new data to process' AS Status WHERE NOT getvariable('has_new_scada');
 
-SELECT '[COMPLETE] Loaded ' || count(*) || ' DUIDs' AS Status FROM duid;
-SELECT '[COMPLETE] Loaded ' || count(*) || ' summary records' AS Status FROM summary;
+-- Use DELETE + INSERT instead of TRUNCATE to allow conditional execution
+DELETE FROM duid WHERE getvariable('has_new_scada');
+INSERT INTO duid SELECT * FROM duid_staging WHERE getvariable('has_new_scada');
+
+DELETE FROM summary WHERE getvariable('has_new_scada');
+INSERT INTO summary BY NAME SELECT * FROM summary_staging WHERE getvariable('has_new_scada');
+
+SELECT '[COMPLETE] Loaded ' || count(*) || ' DUIDs' AS Status FROM duid WHERE getvariable('has_new_scada');
+SELECT '[COMPLETE] Loaded ' || count(*) || ' summary records' AS Status FROM summary WHERE getvariable('has_new_scada');
+SELECT '[COMPLETE] Kept existing ' || count(*) || ' DUIDs (no new data)' AS Status FROM duid WHERE NOT getvariable('has_new_scada');
 ------------------------------------------------------------
 
 -- verify data load
 SELECT '[VERIFY] Latest data timestamp: ' || max(cutoff) AS Status FROM summary;
-
-
------------------------------------------------------------------
---checkpoint;
-use memory ;
-detach dwh ;
-------------------------------------------------------------------
