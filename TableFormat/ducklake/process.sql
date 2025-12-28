@@ -9,131 +9,29 @@ CREATE or replace   SECRET secret_azure (
     ACCOUNT_NAME 'onelake'
 );
 
-ATTACH or replace 'ducklake:sqlite:bronze.db' AS dwh  (DATA_PATH 'abfss://ducklake@onelake.dfs.fabric.microsoft.com/data.Lakehouse/Tables') ;
+SET VARIABLE row_limit = 60;
+SET VARIABLE DATA_PATH = 'abfss://ducklake@onelake.dfs.fabric.microsoft.com/data.Lakehouse/Tables';
+
+----------------------------------------------------------------------------------------------------------------
+
+SELECT '[CONFIG] Processing ' || getvariable('row_limit') || ' files per batch' AS Status;
+
+ATTACH or replace 'ducklake:sqlite:bronze.db' AS dwh (DATA_PATH getvariable('DATA_PATH')) ;
   USE dwh ;
   CALL set_option('parquet_row_group_size', 2048*1000) ;
   CALL set_option('target_file_size', '128MB') ;
   CALL set_option('parquet_compression', 'ZSTD');
-  CALL set_option('parquet_version', 2);
+  CALL set_option('parquet_version', 1);
   CALL set_option('rewrite_delete_threshold', 0);
 
 create schema  if not exists dwh.bronze;
 use dwh.bronze;
 
+
 -------------------------------------------------------------
 
 LOAD zipfs;
 SET  force_download = true;
-
- 
-create table  if not exists calendar as
-SELECT cast(unnest(generate_series(cast ('2018-04-01' as date), cast('2026-12-31' as date), interval 1 day)) as date) as date,
-EXTRACT(year from date) as year,
-EXTRACT(month from date) as month ;
-
-create or replace temp view duid_staging as
-WITH
-  duid_aemo AS (
-    SELECT
-      DUID AS DUID,
-      first(Region) AS Region,
-      first("Fuel Source - Descriptor") AS FuelSourceDescriptor,
-      first(Participant) AS Participant
-    FROM
-      read_csv('https://raw.githubusercontent.com/djouallah/aemo_fabric/refs/heads/djouallah-patch-1/duid_data.csv')
-    WHERE
-      length(DUID) > 2
-    GROUP BY
-      DUID
-  ),
-  states AS (
-    SELECT
-      'WA1' AS RegionID,
-      'Western Australia' AS States
-    UNION ALL
-    SELECT
-      'QLD1',
-      'Queensland'
-    UNION ALL
-    SELECT
-      'NSW1',
-      'New South Wales'
-    UNION ALL
-    SELECT
-      'TAS1',
-      'Tasmania'
-    UNION ALL
-    SELECT
-      'SA1',
-      'South Australia'
-    UNION ALL
-    SELECT
-      'VIC1',
-      'Victoria'
-  ),
-  x AS (
-    SELECT
-      'WA1' AS Region,
-      "Facility Code" AS DUID,
-      "Participant Name" AS Participant
-    FROM
-      read_csv_auto('https://data.wa.aemo.com.au/datafiles/post-facilities/facilities.csv')
-  ),
-  tt AS (
-    SELECT
-      *
-    FROM
-      read_csv_auto('https://github.com/djouallah/aemo_fabric/raw/main/WA_ENERGY.csv', header = 1)
-  ),
-  duid_wa AS (
-    SELECT
-      x.DUID,
-      x.Region,
-      Technology AS FuelSourceDescriptor,
-      x.Participant
-    FROM
-      x
-      LEFT JOIN tt ON x.DUID = tt.DUID
-  ),
-  duid_all AS (
-    SELECT
-      *
-    FROM
-      duid_aemo
-    UNION ALL
-    SELECT
-      *
-    FROM
-      duid_wa
-  ),
-  geo as (
-    select
-      duid,
-      max(latitude) as latitude,
-      max(longitude) as longitude
-    from
-      read_csv(
-        'https://docs.google.com/spreadsheets/d/e/2PACX-1vR_I3U-f2DtY4ex8QXV_S1T19JYy58__nz52Ra6Mm10r3_vJik5OrvQecN-pFWfjUbIE6m0wMl_R6kL/pub?gid=0&single=true&output=csv'
-      )
-    where
-      latitude is not null
-    group by all
-  )
-SELECT
-  a.DUID,
-  Region,
-  UPPER(LEFT(TRIM(FuelSourceDescriptor), 1)) || LOWER(SUBSTR(TRIM(FuelSourceDescriptor), 2)) AS FuelSourceDescriptor,
-  Participant,
-  states.States AS State,
-  geo.latitude,
-  geo.longitude
-FROM
-  duid_all a
-  JOIN states ON a.Region = states.RegionID
-  left JOIN geo ON a.duid = geo.duid;
-
-
-
 
 --- define tables
 
@@ -332,11 +230,36 @@ CREATE TABLE IF NOT EXISTS price (
 CREATE TABLE IF NOT EXISTS summary(
   date DATE,
   "time" INT,
-  cutoff TIMESTAMP WITH TIME ZONE,
+  cutoff TIMESTAMP,
   DUID VARCHAR,
   mw DECIMAL(18, 4),
   price DECIMAL(18, 4)
 );
+
+CREATE TABLE IF NOT EXISTS calendar(
+  date DATE,
+  year INT,
+  month INT
+);
+
+CREATE TABLE IF NOT EXISTS duid(
+  DUID VARCHAR,
+  Region VARCHAR,
+  FuelSourceDescriptor VARCHAR,
+  Participant VARCHAR,
+  State VARCHAR,
+  latitude DOUBLE,
+  longitude DOUBLE
+);
+
+------------------------------------------------------------------------------
+
+INSERT INTO calendar
+SELECT cast(unnest(generate_series(cast ('2018-04-01' as date), cast('2026-12-31' as date), interval 1 day)) as date) as date,
+EXTRACT(year from date) as year,
+EXTRACT(month from date) as month
+WHERE NOT EXISTS (SELECT 1 FROM calendar);
+
 
 ---------------------------------------------------- process scada and price data
 
@@ -362,30 +285,43 @@ WHERE
   line LIKE '%PUBLIC_DAILY%'
 ORDER BY
   full_url DESC
-LIMIT
-  60;
+;
+
+SELECT '[FILES] Found ' || count(*) || ' available files from NEMWEB' AS Status FROM list_files_web;
 
 SET VARIABLE list_of_files_scada = (
   SELECT
     list(full_url)
-  FROM
-    list_files_web
-  WHERE
-    split_part(regexp_extract(full_url, '/([^/]+\.zip)', 1), '.', 1) NOT IN (
-      SELECT DISTINCT split_part(file, '.', 1) FROM scada
-    )
+  FROM (
+    SELECT full_url
+    FROM list_files_web
+    WHERE
+      split_part(regexp_extract(full_url, '/([^/]+\.zip)', 1), '.', 1) NOT IN (
+        SELECT DISTINCT split_part(file, '.', 1) FROM scada
+      )
+    LIMIT getvariable('row_limit')
+  )
 );
+
+SELECT '[SCADA] Processing ' || len(getvariable('list_of_files_scada')) || ' files' AS Status;
+SELECT unnest(getvariable('list_of_files_scada')) AS scada_files;
 
 SET VARIABLE list_of_files_price = (
   SELECT
     list(full_url)
-  FROM
-    list_files_web
-  WHERE
-    split_part(regexp_extract(full_url, '/([^/]+\.zip)', 1), '.', 1) NOT IN (
-      SELECT DISTINCT split_part(file, '.', 1) FROM price
-    )
+  FROM (
+    SELECT full_url
+    FROM list_files_web
+    WHERE
+      split_part(regexp_extract(full_url, '/([^/]+\.zip)', 1), '.', 1) NOT IN (
+        SELECT DISTINCT split_part(file, '.', 1) FROM price
+      )
+    LIMIT getvariable('row_limit')
+  )
 );
+
+SELECT '[PRICE] Processing ' || len(getvariable('list_of_files_price')) || ' files' AS Status;
+SELECT unnest(getvariable('list_of_files_price')) AS price_files;
 
 -------------------------------------- staging area for scada and price data
 
@@ -619,14 +555,118 @@ create or replace temp view price_staging as
       AND VERSION = '3'
   ;
 
-create table if not exists duid as select * from duid_staging limit 0 ;
+SELECT '[DUID] Start processing - fetching from 4 web sources (this may take time)...' AS Status;
+
+create or replace temp table duid_staging as
+WITH
+  duid_aemo AS MATERIALIZED (
+    SELECT
+      DUID AS DUID,
+      first(Region) AS Region,
+      first("Fuel Source - Descriptor") AS FuelSourceDescriptor,
+      first(Participant) AS Participant
+    FROM
+      read_csv('https://raw.githubusercontent.com/djouallah/aemo_fabric/refs/heads/djouallah-patch-1/duid_data.csv')
+    WHERE
+      length(DUID) > 2
+    GROUP BY
+      DUID
+  ),
+  states AS (
+    SELECT
+      'WA1' AS RegionID,
+      'Western Australia' AS States
+    UNION ALL
+    SELECT
+      'QLD1',
+      'Queensland'
+    UNION ALL
+    SELECT
+      'NSW1',
+      'New South Wales'
+    UNION ALL
+    SELECT
+      'TAS1',
+      'Tasmania'
+    UNION ALL
+    SELECT
+      'SA1',
+      'South Australia'
+    UNION ALL
+    SELECT
+      'VIC1',
+      'Victoria'
+  ),
+  x AS MATERIALIZED (
+    SELECT
+      'WA1' AS Region,
+      "Facility Code" AS DUID,
+      "Participant Name" AS Participant
+    FROM
+      read_csv_auto('https://data.wa.aemo.com.au/datafiles/post-facilities/facilities.csv')
+  ),
+  tt AS MATERIALIZED (
+    SELECT
+      *
+    FROM
+      read_csv_auto('https://raw.githubusercontent.com/djouallah/aemo_fabric/refs/heads/main/WA_ENERGY.csv', header = 1)
+  ),
+  duid_wa AS (
+    SELECT
+      x.DUID,
+      x.Region,
+      Technology AS FuelSourceDescriptor,
+      x.Participant
+    FROM
+      x
+      LEFT JOIN tt ON x.DUID = tt.DUID
+  ),
+  duid_all AS (
+    SELECT
+      *
+    FROM
+      duid_aemo
+    UNION ALL
+    SELECT
+      *
+    FROM
+      duid_wa
+  ),
+  geo as MATERIALIZED  (
+    select
+      duid,
+      max(latitude) as latitude,
+      max(longitude) as longitude
+    from
+      read_csv(
+        'https://raw.githubusercontent.com/djouallah/aemo_fabric/refs/heads/main/geo_data.csv'
+      )
+    where
+      latitude is not null
+    group by all
+  )
+SELECT
+  a.DUID,
+  Region,
+  UPPER(LEFT(TRIM(FuelSourceDescriptor), 1)) || LOWER(SUBSTR(TRIM(FuelSourceDescriptor), 2)) AS FuelSourceDescriptor,
+  Participant,
+  states.States AS State,
+  geo.latitude,
+  geo.longitude
+FROM
+  duid_all a
+  JOIN states ON a.Region = states.RegionID
+  left JOIN geo ON a.duid = geo.duid;
+
+SELECT '[DUID] Loaded ' || count(*) || ' facilities from web sources' AS Status FROM duid_staging;
+  
 create or replace temp view  summary_staging as
 select
   s.DATE as date,
   cast(strftime(s.SETTLEMENTDATE, '%H%M') AS INT16) as time,
   (
     select
-      max(cast(settlementdate as TIMESTAMPTZ))
+      max(cast(settlementdate as TIMESTAMP))
     from
       scada
   ) as cutoff,
@@ -662,6 +702,8 @@ SELECT
 FROM
   scada_staging ;
 
+SELECT '[INSERT] Inserted ' || count(*) || ' SCADA records' AS Status FROM scada WHERE date >= current_date - interval '7 days';
+
 INSERT INTO
   price BY NAME
 SELECT
@@ -675,27 +717,25 @@ SELECT
 FROM
   price_staging ;
 
+SELECT '[INSERT] Inserted ' || count(*) || ' PRICE records' AS Status FROM price WHERE date >= current_date - interval '7 days';
+
+SELECT '[REFRESH] Refreshing dimension tables...' AS Status;
+
 BEGIN TRANSACTION;
-truncate duid    ;insert into duid select * from duid_staging ;
-truncate summary ;insert into  summary BY NAME  select * from summary_staging ;
+truncate duid     ;insert into duid select * from duid_staging ;
+truncate summary  ;insert into summary BY NAME select * from summary_staging ;
 COMMIT;
+
+SELECT '[COMPLETE] Loaded ' || count(*) || ' DUIDs' AS Status FROM duid;
+SELECT '[COMPLETE] Loaded ' || count(*) || ' summary records' AS Status FROM summary;
 ------------------------------------------------------------
 
 -- verify data load
-select	count(distinct file) from scada ;
+SELECT '[VERIFY] Latest data timestamp: ' || max(cutoff) AS Status FROM summary;
 
-with summ_results as (
-  select week(date) as wk, sum(mw) as Mwh
-  from summary
-  group by all
-)
-select wk,
-     bar(sum(Mwh), min(sum(Mwh)) OVER (), max(sum(Mwh)) OVER ()) as Mwh
-                     from summ_results group by wk order by wk desc ;
 
 -----------------------------------------------------------------
-checkpoint;
+--checkpoint;
 use memory ;
 detach dwh ;
-
 ------------------------------------------------------------------
