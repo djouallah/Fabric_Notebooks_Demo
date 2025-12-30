@@ -356,3 +356,6 @@ FROM final_with_cutoff
 ORDER BY date, DUID, time;
 
 insert into summary BY NAME select * from summary_today_staging ;
+
+-- verify data load
+SELECT '[VERIFY] Latest data timestamp: ' || max(cutoff) AS Status FROM summary;

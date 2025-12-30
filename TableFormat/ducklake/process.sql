@@ -720,5 +720,3 @@ SELECT '[COMPLETE] Loaded ' || count(*) || ' summary records' AS Status FROM sum
 SELECT '[COMPLETE] Kept existing ' || count(*) || ' DUIDs (no new data)' AS Status FROM duid WHERE NOT getvariable('has_new_scada');
 ------------------------------------------------------------
 
--- verify data load
-SELECT '[VERIFY] Latest data timestamp: ' || max(cutoff) AS Status FROM summary;
