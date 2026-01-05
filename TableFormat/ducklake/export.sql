@@ -1,4 +1,11 @@
+-- verify data load
+SELECT '[VERIFY] Latest data timestamp: ' || max(cutoff) AS Status FROM summary;
 
+SELECT '[CHECKPOINT] Exporting inline data to Parquet files, compaction etc ...' AS Status;
+CALL ducklake_flush_inlined_data('dwh');
+checkpoint;
+
+SELECT 'Export Delta Metadata' AS Status;
 
 use  __ducklake_metadata_dwh  ; 
 
