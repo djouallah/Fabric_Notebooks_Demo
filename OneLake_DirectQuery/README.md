@@ -82,3 +82,6 @@ latest CLI build on first run.
   while the process is running, but the cache lives in memory only — restart
   the server and it's gone, so the next session pays the full cold-read cost
   against OneLake again.
+- **Cold runs are slow.** The first query of a session is network-bound on
+  parquet reads from OneLake (not CPU-bound). Subsequent queries hitting the
+  in-memory cache are much faster — until you restart, see above.
