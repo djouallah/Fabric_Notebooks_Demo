@@ -72,12 +72,15 @@ latest CLI build on first run.
 
 ## Limitations
 
+- **The driver is manual** Hopefully one day, we will have it packaged in PowerBI desktop
+
 - **No token auto-refresh.** As far as I can tell, DuckDB does not refresh the
   Entra access token on its own. That's fine for an interactive CLI session,
   but it's a real problem here because DuckDB is acting as a long-running
   server: once the ~1-hour token expires, OneLake reads start failing and the
   only fix is to close the DuckDB console and relaunch `Iceberg.vbs` (which
   mints a new token and writes a fresh init script).
+  please likes or comment:  https://github.com/duckdb/duckdb-iceberg/issues/499
 - **Remote-file cache is not persistent.** DuckDB caches remote parquet pages
   while the process is running, but the cache lives in memory only — restart
   the server and it's gone, so the next session pays the full cold-read cost
